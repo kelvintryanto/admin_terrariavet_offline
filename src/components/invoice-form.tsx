@@ -532,11 +532,15 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
     const taxAmount = (subtotal * taxPercentage) / 100;
     const total = subtotal + taxAmount;
 
+    // For outpatient invoices, the balance is the same as the total
+    // For inpatient invoices, the balance is total - deposit
+    const balance = type === 'outpatient' ? total : total - formData.deposit;
+
     setFormData((prev) => ({
       ...prev,
       subtotal,
       total,
-      balance: total - prev.deposit,
+      balance,
     }));
   };
 
@@ -594,6 +598,30 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
 
       const result = await response.json();
 
+      // Update product stock for each cart item
+      if (formData.cartItems.length > 0) {
+        // Create an array of product updates
+        const productUpdates = formData.cartItems.map((item) => ({
+          productId: item._id,
+          quantity: item.quantity,
+        }));
+
+        // Send the updates to the server using PATCH method
+        const stockUpdateResponse = await fetch('/api/products', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ products: productUpdates }),
+        });
+
+        if (!stockUpdateResponse.ok) {
+          console.error('Failed to update product stock');
+          // Continue with invoice creation even if stock update fails
+          // We don't want to block the invoice creation if stock update fails
+        }
+      }
+
       // Get the created invoice data
       const createdInvoice = await fetch(
         `/api/invoices/${result.insertedId}`
@@ -644,6 +672,23 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
     } catch (error) {
       console.error('Error pre-fetching customer data:', error);
     }
+  };
+
+  const handleDepositChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatNumber(e.target.value);
+    setDepositText(formatted);
+    const numericValue = Number(e.target.value.replace(/[^0-9]/g, ''));
+
+    // For outpatient invoices, the balance should remain the same as the total
+    // For inpatient invoices, the balance is total - deposit
+    const balance =
+      type === 'outpatient' ? formData.total : formData.total - numericValue;
+
+    setFormData((prev) => ({
+      ...prev,
+      deposit: numericValue,
+      balance: balance,
+    }));
   };
 
   return (
@@ -1500,18 +1545,7 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
                         <Input
                           id="deposit"
                           value={depositText}
-                          onChange={(e) => {
-                            const formatted = formatNumber(e.target.value);
-                            setDepositText(formatted);
-                            const numericValue = Number(
-                              e.target.value.replace(/[^0-9]/g, '')
-                            );
-                            setFormData((prev) => ({
-                              ...prev,
-                              deposit: numericValue,
-                              balance: prev.total - numericValue,
-                            }));
-                          }}
+                          onChange={handleDepositChange}
                           placeholder="0"
                         />
                       </div>

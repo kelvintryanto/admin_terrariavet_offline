@@ -22,6 +22,16 @@ export function InvoiceTable({
   onView,
   onDownload,
 }: InvoiceTableProps) {
+  // Helper function to get the correct balance based on invoice type
+  const getBalance = (invoice: InvoiceData & { _id?: string }) => {
+    // For outpatient invoices, the balance is the same as the total
+    if (invoice.type === 'outpatient') {
+      return invoice.total;
+    }
+    // For inpatient invoices, use the calculated balance
+    return invoice.balance;
+  };
+
   return (
     <Table>
       <TableHeader>
@@ -69,7 +79,7 @@ export function InvoiceTable({
               {formatRupiah(invoice.deposit)}
             </TableCell>
             <TableCell className="hidden lg:table-cell text-right whitespace-nowrap">
-              {formatRupiah(invoice.balance)}
+              {formatRupiah(getBalance(invoice))}
             </TableCell>
             <TableCell>
               <div className="flex justify-end gap-2">

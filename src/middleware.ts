@@ -13,26 +13,20 @@ export async function middleware(request: NextRequest) {
 
   try {
     const user = await getUserFromRequest();
-    console.log('Middleware - User:', user);
 
     // No user found, redirect to login
     if (!user) {
-      console.log('Middleware - No user found');
       return NextResponse.redirect(new URL('/login', request.url));
     }
 
     // Check if user has CMS access
     const hasAccess = canAccessCMS(user.role);
-    console.log('Middleware - Role:', user.role, 'Has Access:', hasAccess);
 
     // If no access, redirect to home
     if (!hasAccess) {
-      console.log('Middleware - Access denied');
       return NextResponse.redirect(new URL('/', request.url));
     }
 
-    // User has access, allow request to proceed
-    console.log('Middleware - Access granted');
     const response = NextResponse.next();
     return response;
   } catch (error) {

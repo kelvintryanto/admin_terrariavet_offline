@@ -1,5 +1,5 @@
-import { Db, ObjectId } from "mongodb";
-import { connectToDatabase } from "../config/config";
+import { Db, ObjectId } from 'mongodb';
+import { connectToDatabase } from '../config/config';
 
 export interface Product {
   _id?: ObjectId;
@@ -13,8 +13,14 @@ export interface Product {
   updatedAt?: string;
 }
 
-const DATABASE_NAME = "terrariavet";
-const COLLECTION = "products";
+// Interface for product stock update
+export interface ProductStockUpdate {
+  productId: string;
+  quantity: number;
+}
+
+const DATABASE_NAME = 'terrariavet';
+const COLLECTION = 'products';
 
 export const getDb = async () => {
   const client = await connectToDatabase();
@@ -23,7 +29,7 @@ export const getDb = async () => {
 };
 
 export const createProduct = async (
-  product: Omit<Product, "_id" | "createdAt" | "updatedAt">
+  product: Omit<Product, '_id' | 'createdAt' | 'updatedAt'>
 ) => {
   const db = await getDb();
   const bodyInput = {
@@ -68,7 +74,7 @@ export const updateProduct = async (id: string, data: Partial<Product>) => {
     .updateOne({ _id: ObjectId.createFromHexString(id) }, update);
 
   if (result.matchedCount === 0) {
-    throw new Error("Product not found");
+    throw new Error('Product not found');
   }
 
   return result;
@@ -81,8 +87,65 @@ export const deleteProduct = async (id: string) => {
   });
 
   if (result.deletedCount === 0) {
-    throw new Error("Product not found");
+    throw new Error('Product not found');
   }
 
   return result;
+};
+
+export const updateProductStock = async (updates: ProductStockUpdate[]) => {
+  const db = await getDb();
+  const productsCollection = db.collection(COLLECTION);
+
+  const updateResults = [];
+  const failedUpdates = [];
+
+  // Process each product update sequentially
+  for (const update of updates) {
+    const { productId, quantity } = update;
+
+    if (!productId || !quantity) {
+      failedUpdates.push({
+        success: false,
+        productId,
+        error: 'Missing productId or quantity',
+      });
+      continue;
+    }
+
+    try {
+      // Find the product and update its stock
+      const result = await productsCollection.updateOne(
+        { _id: new ObjectId(productId) },
+        {
+          $inc: { jumlah: -quantity }, // Decrease the stock by the quantity
+          $set: { updatedAt: new Date().toISOString() },
+        }
+      );
+
+      if (result.matchedCount === 0) {
+        failedUpdates.push({
+          success: false,
+          productId,
+          error: 'Product not found',
+        });
+        continue;
+      }
+
+      updateResults.push({ success: true, productId });
+    } catch (error) {
+      console.error(`Error updating product ${productId}:`, error);
+      failedUpdates.push({
+        success: false,
+        productId,
+        error: 'Database error',
+      });
+    }
+  }
+
+  return {
+    success: failedUpdates.length === 0,
+    updateResults,
+    failedUpdates,
+  };
 };
