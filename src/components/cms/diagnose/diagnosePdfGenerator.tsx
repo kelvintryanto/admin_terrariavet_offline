@@ -146,13 +146,13 @@ export async function CreateDiagnosePDFTemplate(
         pdf.line(margin, 45, pageWidth - margin, 45);
 
         // Header
-        yPos += 40;
+        yPos += 35;
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(18);
         pdf.text("HASIL DIAGNOSA", pageWidth / 2, yPos, { align: "center" });
 
         // Add invoice number with correct format
-        yPos += 5;
+        yPos += 7;
         pdf.setFontSize(12);
         pdf.text(ensureCorrectFormat(data.dxNumber), pageWidth / 2, yPos, {
           align: "center",
@@ -165,26 +165,64 @@ export async function CreateDiagnosePDFTemplate(
         pdf.setFont("helvetica", "normal");
 
         const addField = (label: string, value: string) => {
-          yPos += 10;
-          checkAndAddPage(15);
-          // Add label with proper spacing
+          const maxWidth = pageWidth - margin * 2 - 40; // Maksimal lebar teks
+          const lineHeight = 5; // Spasi antar baris teks
+          let splitLines: string[] = [];
+
+          if (value.includes("\n")) {
+            // Jika ada newline, pecah berdasarkan "\n"
+            splitLines = value.split("\n").map((line) => line.trim());
+          } else if (pdf.getTextWidth(value) > maxWidth) {
+            // Jika teks terlalu panjang, pecah menjadi beberapa baris
+            const words = value.split(" ");
+            let currentLine = "";
+
+            words.forEach((word) => {
+              const testLine = currentLine + (currentLine ? " " : "") + word;
+              if (pdf.getTextWidth(testLine) < maxWidth) {
+                currentLine = testLine;
+              } else {
+                splitLines.push(currentLine);
+                currentLine = word;
+              }
+            });
+
+            if (currentLine) splitLines.push(currentLine);
+          } else {
+            splitLines = [value]; // Jika teks pendek, langsung masukkan
+          }
+
+          yPos += 4; // Beri jarak sebelum teks
+          checkAndAddPage(splitLines.length * lineHeight + 4); // Pastikan tidak terpotong halaman
+
+          // Tulis label
           pdf.text(`${label}:`, margin, yPos);
-          // Add value with proper offset from label
-          pdf.text(value || "-", margin + 40, yPos);
-          drawLine(yPos + 4);
+
+          // Tulis setiap baris teks hasil pemeriksaan dengan yPos yang selalu turun
+          splitLines.forEach((line, index) => {
+            pdf.text(line, margin + 40, yPos + index * lineHeight);
+          });
+
+          // Tambahkan garis di bawah teks terakhir
+          drawLine(yPos + splitLines.length * lineHeight);
+
+          // Update yPos setelah teks terakhir
+          yPos += splitLines.length * lineHeight + 3;
         };
 
+        yPos += 5;
         addField("Nama", data.clientSnapShot?.name || "-");
         addField("Kontak", data.clientSnapShot?.phone || "-");
         addField("Pet", data.dogSnapShot?.name || "-");
 
         // Medical Information
-        yPos += 15;
+        yPos += 10;
         checkAndAddPage(20);
         pdf.setFont("helvetica", "bold");
         pdf.text("Informasi Perawatan", margin, yPos);
         pdf.setFont("helvetica", "normal");
 
+        yPos += 5;
         addField(
           "Tanggal Perawatan",
           `${new Date(data.dxDate).toLocaleDateString("id-ID", {
@@ -197,7 +235,7 @@ export async function CreateDiagnosePDFTemplate(
           })}` || "-"
         );
         addField("Dokter", `${data.doctorName}` || "-");
-        addField("Keluhan", `${data.symptom}` || "-");
+        addField("Gejala", `${data.symptom}` || "-");
         addField("Hasil Pemeriksaan", `${data.description}` || "-");
 
         // Add page number
