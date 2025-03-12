@@ -17,6 +17,16 @@ export function InvoiceCard({
   onView,
   onDownload,
 }: InvoiceCardProps) {
+  // Helper function to get the correct balance based on invoice type
+  const getBalance = (invoice: InvoiceData & { _id?: string }) => {
+    // For outpatient invoices, the balance is the same as the total
+    if (invoice.type === 'outpatient') {
+      return invoice.total;
+    }
+    // For inpatient invoices, use the calculated balance
+    return invoice.balance;
+  };
+
   return (
     <Card className="hover:bg-accent cursor-pointer transition-colors">
       <CardContent className="p-4">
@@ -56,7 +66,9 @@ export function InvoiceCard({
               </div>
               <div>
                 <p className="text-muted-foreground">Sisa</p>
-                <p className="font-medium">{formatRupiah(invoice.balance)}</p>
+                <p className="font-medium">
+                  {formatRupiah(getBalance(invoice))}
+                </p>
               </div>
             </div>
             <div className="flex justify-end gap-2 pt-2">

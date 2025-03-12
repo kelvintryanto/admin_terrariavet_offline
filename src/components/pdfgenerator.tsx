@@ -143,44 +143,50 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
           { align: 'right' }
         );
 
-        // Add header line
-        pdf.line(margin, 45, pageWidth - margin, 45);
+        // Add header line - reduced from 45 to 40
+        pdf.line(margin, 40, pageWidth - margin, 40);
 
-        // Header
-        yPos += 40;
+        // Header - reduced from 40 to 35
+        yPos += 35;
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(18);
         pdf.text('INVOICE PERAWATAN', pageWidth / 2, yPos, { align: 'center' });
 
-        // Add invoice number with correct format
-        yPos += 5;
+        // Add invoice number with correct format - reduced from 5 to 4
+        yPos += 4;
         pdf.setFontSize(12);
         pdf.text(ensureCorrectFormat(data.invoiceNo), pageWidth / 2, yPos, {
           align: 'center',
         });
 
-        // Client Information
-        yPos += 10;
+        // Client Information - reduced from 10 to 8
+        yPos += 8;
         pdf.setFontSize(12);
         pdf.text('Klien', margin, yPos);
         pdf.setFont('helvetica', 'normal');
 
         const addField = (label: string, value: string) => {
-          yPos += 10;
-          checkAndAddPage(15);
-          // Add label with proper spacing
-          pdf.text(`${label}:`, margin, yPos);
-          // Add value with proper offset from label
-          pdf.text(value || '-', margin + 30, yPos);
-          drawLine(yPos + 5);
+          yPos += 8;
+          checkAndAddPage(12);
+
+          // Fixed positions for better alignment
+          const labelX = margin;
+          const colonX = margin + 45; // Position for the colon
+          const valueX = margin + 50; // Position for the value
+
+          pdf.text(label, labelX, yPos);
+          pdf.text(':', colonX, yPos);
+          pdf.text(value || '-', valueX, yPos);
+
+          drawLine(yPos + 3);
         };
 
         addField('Nama', data.clientName || '-');
         addField('Kontak', data.contact || '-');
         addField('Sub Akun', data.subAccount || '-');
 
-        // Booking Information
-        yPos += 15;
+        // Booking Information - reduced from 15 to 12
+        yPos += 12;
         checkAndAddPage(20);
         pdf.setFont('helvetica', 'bold');
         pdf.text('Informasi Perawatan', margin, yPos);
@@ -196,7 +202,6 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
             `${data.dischargeDate} ${data.dischargeTime}` || '-'
           );
         }
-        addField('Lokasi', data.location);
         addField('Total', `Rp ${data.total.toLocaleString()}`);
         if (data.type === 'inpatient') {
           addField('Deposit', `Rp ${data.deposit.toLocaleString()}`);
@@ -204,239 +209,294 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
         }
         addField('Status', data.status);
 
-        // Services
-        yPos += 25;
+        // Services - reduced from 25 to 15
+        yPos += 15;
         checkAndAddPage(20);
         pdf.setFont('helvetica', 'bold');
         pdf.text('Servis', margin, yPos);
         pdf.setFont('helvetica', 'normal');
 
-        // Services table
-        yPos += 10;
-        const serviceHeaders = ['Servis', 'Tanggal', 'Harga'];
-        const serviceColWidths = [100, 30, 45];
-        const startX = margin;
-        const maxServiceNameWidth = 95;
+        // Services table - more compact spacing
+        yPos += 6; // Reduced from 8
 
-        // Draw header line
-        drawLine(yPos - 5);
+        // Check if services array is empty
+        if (!data.services || data.services.length === 0) {
+          // Show "No data" message instead of table headers
+          yPos += 4; // Reduced from 8 to 4 to be closer to the header
+          pdf.text('Tidak ada data', margin, yPos);
+          yPos += 6; // Reduced from 10 to 6
+        } else {
+          const serviceHeaders = ['Nama', 'Tanggal', 'Harga'];
+          // Calculate total available width and distribute it evenly for 3 columns
+          const availableWidth = pageWidth - 2 * margin;
+          const serviceColWidths = [
+            availableWidth / 3, // 1/3 for service name
+            availableWidth / 3, // 1/3 for date
+            availableWidth / 3, // 1/3 for price
+          ];
+          const startX = margin;
+          const maxServiceNameWidth = serviceColWidths[0] - 5; // Leave some padding
 
-        // Print headers
-        let currentX = startX;
-        serviceHeaders.forEach((header, i) => {
-          if (i === 0) {
-            pdf.text(header, currentX, yPos);
-          } else {
-            pdf.text(header, currentX + serviceColWidths[i] / 2, yPos, {
+          // Draw header line with more compact spacing
+          drawLine(yPos - 1); // Reduced from -2
+
+          // Print headers with reduced spacing
+          yPos += 4; // Reduced from 6
+
+          // Use normal font with slightly larger size instead of bold for a semi-bold effect
+          pdf.setFont('helvetica', 'normal');
+          // Store current font size and set a slightly larger one
+          const headerFontSize = 12.5; // Slightly larger than the default 12
+          pdf.setFontSize(headerFontSize);
+
+          // Fixed positions for better alignment - evenly distributed
+          let posX = startX;
+          pdf.text(serviceHeaders[0], posX, yPos); // Left align first column
+
+          posX += serviceColWidths[0];
+          pdf.text(serviceHeaders[1], posX + serviceColWidths[1] / 2, yPos, {
+            align: 'center',
+          }); // Center align middle column
+
+          posX += serviceColWidths[1];
+          // Right align last column - align with the end of the line
+          pdf.text(serviceHeaders[2], pageWidth - margin, yPos, {
+            align: 'right',
+          });
+
+          // Reset font size to normal
+          const defaultFontSize = 12; // Reset to default size
+          pdf.setFontSize(defaultFontSize);
+
+          // Draw line after headers with more compact spacing - match the spacing in Cart Items table
+          yPos += 2; // Changed from 1 to 2 to match Cart Items table
+          drawLine(yPos);
+          yPos += 2; // Changed from 1 to 2 to match Cart Items table
+
+          // Print service items with more compact spacing
+          data.services.forEach((service) => {
+            yPos += 4; // Reduced from 6
+            checkAndAddPage(10); // Reduced from 12
+            let itemX = startX;
+
+            // Service name - keep on single line by adjusting font size if needed
+            const serviceNameWidth = pdf.getTextWidth(service.name);
+            if (serviceNameWidth > maxServiceNameWidth) {
+              // Calculate and set a smaller font size to fit the text
+              const scaleFactor = maxServiceNameWidth / serviceNameWidth;
+              const newFontSize = Math.max(
+                7,
+                Math.floor(defaultFontSize * scaleFactor)
+              ); // Don't go smaller than 7pt
+
+              // Set smaller size, render text, then restore
+              pdf.setFontSize(newFontSize);
+              pdf.text(service.name, itemX, yPos);
+              pdf.setFontSize(defaultFontSize); // Restore original font size
+            } else {
+              pdf.text(service.name, itemX, yPos);
+            }
+
+            // Move to date column position
+            itemX += serviceColWidths[0];
+
+            // Date centered
+            const formattedDate = new Date(service.date).toLocaleDateString(
+              'id-ID',
+              {
+                day: '2-digit',
+                month: 'short',
+              }
+            );
+            pdf.text(formattedDate, itemX + serviceColWidths[1] / 2, yPos, {
               align: 'center',
             });
-          }
-          currentX += serviceColWidths[i];
-        });
 
-        // Draw line after headers
-        drawLine(yPos + 2);
+            // Price right aligned - align with the end of the line
+            pdf.text(
+              `Rp ${service.price.toLocaleString()}`,
+              pageWidth - margin,
+              yPos,
+              { align: 'right' }
+            );
 
-        // Print service items
-        data.services.forEach((service) => {
-          yPos += 10;
-          checkAndAddPage(20);
-          currentX = startX;
-
-          // Service name - Split into multiple lines if too long
-          const serviceNameWidth = pdf.getTextWidth(service.name);
-          if (serviceNameWidth > maxServiceNameWidth) {
-            const words = service.name.split(' ');
-            let line = '';
-            let firstLine = true;
-
-            words.forEach((word) => {
-              const testLine = line + (line ? ' ' : '') + word;
-              const testWidth = pdf.getTextWidth(testLine);
-
-              if (testWidth > maxServiceNameWidth) {
-                pdf.text(line, currentX, yPos);
-                line = word;
-                if (firstLine) {
-                  yPos += 5;
-                  firstLine = false;
-                }
-              } else {
-                line = testLine;
-              }
-            });
-
-            if (line) {
-              pdf.text(line, currentX, yPos);
-            }
-          } else {
-            pdf.text(service.name, currentX, yPos);
-          }
-          currentX += serviceColWidths[0];
-
-          // Date
-          const formattedDate = new Date(service.date).toLocaleDateString(
-            'id-ID',
-            {
-              day: '2-digit',
-              month: 'short',
-            }
-          );
-          pdf.text(formattedDate, currentX + serviceColWidths[1] / 2, yPos, {
-            align: 'center',
+            // Consistent spacing after text and before line
+            yPos += 2; // Adjusted for symmetry
+            drawLine(yPos);
+            yPos += 2; // Adjusted for symmetry
           });
-          currentX += serviceColWidths[1];
+        }
 
-          // Price
-          pdf.text(
-            `Rp ${service.price.toLocaleString()}`,
-            currentX + serviceColWidths[2],
-            yPos,
-            { align: 'right' }
-          );
-
-          // Draw line after each item
-          drawLine(yPos + 4);
-          yPos += 2;
-        });
-
-        // Cart Items
-        yPos += 15;
-        checkAndAddPage(20);
+        // Cart Items - more compact spacing
+        yPos += 10; // Consistent spacing between sections
+        checkAndAddPage(15); // Reduced from 20
         pdf.setFont('helvetica', 'bold');
         pdf.text('Keranjang Pasien', margin, yPos);
         pdf.setFont('helvetica', 'normal');
 
-        // Cart table headers
-        yPos += 10;
-        const headers = ['#', 'Nama', 'Tanggal', 'Harga', 'Kuantitas', 'Total'];
-        const colWidths = [10, 70, 25, 25, 20, 25];
-        const cartStartX = margin;
-        const maxNameWidth = 65;
+        // Cart Items section with more compact spacing
+        yPos += 6; // Reduced from 8
 
-        // Draw header line
-        drawLine(yPos - 5);
+        // Check if cart items array is empty
+        if (!data.cartItems || data.cartItems.length === 0) {
+          // Show "No data" message instead of table headers
+          yPos += 4; // Reduced from 8 to 4 to be closer to the header
+          pdf.text('Tidak ada data', margin, yPos);
+          yPos += 6; // Reduced from 10 to 6
+        } else {
+          const headers = ['Nama', 'Tanggal', 'Harga', 'Kuantitas', 'Total'];
+          // Distribute cart columns width evenly for 5 columns
+          const availableWidth = pageWidth - 2 * margin;
+          const colWidths = [
+            availableWidth / 5, // 1/5 for name
+            availableWidth / 5, // 1/5 for date
+            availableWidth / 5, // 1/5 for price
+            availableWidth / 5, // 1/5 for quantity
+            availableWidth / 5, // 1/5 for total
+          ];
+          const cartStartX = margin;
+          const maxNameWidth = colWidths[0] - 5; // Leave some padding
 
-        // Print headers
-        currentX = cartStartX;
-        headers.forEach((header, i) => {
-          const align = i === 1 ? 'left' : 'center';
-          if (i === 0) {
-            pdf.text(header, currentX, yPos);
-          } else {
-            pdf.text(
-              header,
-              currentX + (i === 1 ? 0 : colWidths[i] / 2),
-              yPos,
+          // Draw header line with more compact spacing
+          drawLine(yPos - 1); // Reduced from -2
+
+          // Print headers with reduced spacing
+          yPos += 4; // Reduced from 6
+
+          // Use normal font with slightly larger size instead of bold for a semi-bold effect
+          pdf.setFont('helvetica', 'normal');
+          // Set a slightly larger font size for headers
+          pdf.setFontSize(12.5); // Slightly larger than the default 12
+
+          // Fixed positions for better alignment - evenly distributed
+          let posX = cartStartX;
+          pdf.text(headers[0], posX, yPos); // Left align name column
+
+          posX += colWidths[0];
+          pdf.text(headers[1], posX + colWidths[1] / 2, yPos, {
+            align: 'center',
+          }); // Center align date
+
+          posX += colWidths[1];
+          pdf.text(headers[2], posX + colWidths[2] / 2, yPos, {
+            align: 'center',
+          }); // Center align price
+
+          posX += colWidths[2];
+          pdf.text(headers[3], posX + colWidths[3] / 2, yPos, {
+            align: 'center',
+          }); // Center align quantity
+
+          // Right align total column - align with the end of the line
+          pdf.text(headers[4], pageWidth - margin, yPos, {
+            align: 'right',
+          });
+
+          // Reset font size to normal
+          const defaultFontSize = 12; // Reset to default size
+          pdf.setFontSize(defaultFontSize);
+
+          // Draw line after headers with more compact spacing
+          yPos += 2; // Adjusted for symmetry
+          drawLine(yPos);
+          yPos += 2; // Adjusted for symmetry
+
+          // Print cart items with more compact spacing
+          data.cartItems.forEach((item) => {
+            yPos += 4; // Reduced from 6
+            checkAndAddPage(10); // Reduced from 12
+            let itemX = cartStartX;
+
+            // Name - keep on single line by adjusting font size if needed
+            const nameWidth = pdf.getTextWidth(item.name);
+            if (nameWidth > maxNameWidth) {
+              // Calculate and set a smaller font size to fit the text
+              const scaleFactor = maxNameWidth / nameWidth;
+              const newFontSize = Math.max(
+                7,
+                Math.floor(defaultFontSize * scaleFactor)
+              ); // Don't go smaller than 7pt
+
+              // Set smaller size, render text, then restore
+              pdf.setFontSize(newFontSize);
+              pdf.text(item.name, itemX, yPos);
+              pdf.setFontSize(defaultFontSize); // Restore original font size
+            } else {
+              pdf.text(item.name, itemX, yPos);
+            }
+
+            // Move to date column position
+            itemX += colWidths[0];
+
+            // Date centered
+            const formattedDate = new Date(item.date).toLocaleDateString(
+              'id-ID',
               {
-                align,
+                day: '2-digit',
+                month: 'short',
               }
             );
-          }
-          currentX += colWidths[i];
-        });
-
-        // Draw line after headers
-        drawLine(yPos + 2);
-
-        // Print cart items
-        data.cartItems.forEach((item, index) => {
-          yPos += 12;
-          checkAndAddPage(15);
-
-          currentX = cartStartX;
-          // Item number
-          pdf.text((index + 1).toString() + '.', currentX, yPos);
-          currentX += colWidths[0];
-
-          // Name (with possible description)
-          const nameWidth = pdf.getTextWidth(item.name);
-          if (nameWidth > maxNameWidth) {
-            const words = item.name.split(' ');
-            let line = '';
-            let firstLine = true;
-
-            words.forEach((word) => {
-              const testLine = line + (line ? ' ' : '') + word;
-              const testWidth = pdf.getTextWidth(testLine);
-
-              if (testWidth > maxNameWidth) {
-                pdf.text(line, currentX, yPos);
-                line = word;
-                if (firstLine) {
-                  yPos += 5;
-                  firstLine = false;
-                }
-              } else {
-                line = testLine;
-              }
+            pdf.text(formattedDate, itemX + colWidths[1] / 2, yPos, {
+              align: 'center',
             });
 
-            if (line) {
-              pdf.text(line, currentX, yPos);
-            }
-          } else {
-            pdf.text(item.name, currentX, yPos);
-          }
+            // Move to price column position
+            itemX += colWidths[1];
 
-          currentX += colWidths[1];
+            // Price centered
+            pdf.text(
+              `Rp ${item.harga.toLocaleString()}`,
+              itemX + colWidths[2] / 2,
+              yPos,
+              {
+                align: 'center',
+              }
+            );
 
-          // Date
-          const formattedDate = new Date(item.date).toLocaleDateString(
-            'id-ID',
-            {
-              day: '2-digit',
-              month: 'short',
-            }
-          );
-          pdf.text(formattedDate, currentX + colWidths[2] / 2, yPos, {
-            align: 'center',
-          });
-          currentX += colWidths[2];
+            // Move to quantity column position
+            itemX += colWidths[2];
 
-          // Price
-          pdf.text(item.harga.toLocaleString(), currentX + colWidths[3], yPos, {
-            align: 'right',
-          });
-          currentX += colWidths[3];
-
-          // Quantity
-          pdf.text(
-            item.quantity.toString(),
-            currentX + colWidths[4] / 2,
-            yPos,
-            {
+            // Quantity centered
+            pdf.text(item.quantity.toString(), itemX + colWidths[3] / 2, yPos, {
               align: 'center',
-            }
-          );
-          currentX += colWidths[4];
+            });
 
-          // Total
-          pdf.text(item.total.toLocaleString(), currentX + colWidths[5], yPos, {
-            align: 'right',
+            // Total right aligned - align with the end of the line
+            pdf.text(
+              `Rp ${item.total.toLocaleString()}`,
+              pageWidth - margin,
+              yPos,
+              {
+                align: 'right',
+              }
+            );
+
+            // Consistent spacing after text and before line
+            yPos += 2; // Adjusted for symmetry
+            drawLine(yPos);
+            yPos += 2; // Adjusted for symmetry
           });
-
-          // Draw line after each item
-          drawLine(yPos + 4);
-          yPos += 2;
-        });
+        }
 
         // Financial Breakdown
-        const remainingSpace = pageHeight - (yPos + 60);
-        if (remainingSpace < 60) {
+        // Reduced space check from 60 to 40
+        const remainingSpace = pageHeight - (yPos + 40);
+        if (remainingSpace < 40) {
           pdf.addPage();
           yPos = margin;
         } else {
-          yPos += 20;
+          // Reduced from 20 to 15
+          yPos += 15;
         }
 
         pdf.setFont('helvetica', 'bold');
         pdf.text('Rincian Biaya', pageWidth - margin - 80, yPos);
         pdf.setFont('helvetica', 'normal');
 
-        const lineHeight = 8;
+        // Reduced from 8 to 6
+        const lineHeight = 6;
         const breakdownLeft = pageWidth - margin - 80;
-        yPos += 8;
+        yPos += 6;
 
         // Function to add breakdown line
         const addBreakdownLine = (
@@ -468,6 +528,9 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
         if (data.type === 'inpatient') {
           addBreakdownLine('Deposit', data.deposit);
           addBreakdownLine('Sisa', data.balance, true);
+        } else {
+          // For outpatient invoices, show the total as the balance
+          addBreakdownLine('Sisa', data.total, true);
         }
 
         // Add page number
