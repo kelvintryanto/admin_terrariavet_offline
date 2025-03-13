@@ -6,6 +6,7 @@ import {
   getAllDiagnoses,
 } from '@/app/models/diagnose';
 import { canCreateDiagnose } from '@/app/utils/authCheck';
+import { getWIBDate } from '@/app/utils/date-utils';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
@@ -48,8 +49,8 @@ export async function POST(request: NextRequest) {
        * di post ini bikin DXNumber dan DX datenya
        *
        */
-      // Get current date components
-      const now = new Date();
+      // Get current date components in WIB timezone
+      const now = getWIBDate();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, '0');
       const day = String(now.getDate()).padStart(2, '0');

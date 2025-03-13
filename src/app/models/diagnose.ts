@@ -1,6 +1,7 @@
 import { ClientSnapShotData, DogSnapShotData } from '@/data/types';
 import { Db, ObjectId, UpdateFilter } from 'mongodb';
 import { connectToDatabase } from '../config/config';
+import { getWIBDate } from '../utils/date-utils';
 
 const DATABASE_NAME = 'terrariavet';
 const COLLECTION = 'diagnoses';
@@ -44,7 +45,8 @@ export const getDb = async () => {
 export const createDiagnose = async (diagnose: CreateDiagnose) => {
   const db = await getDb();
 
-  const now = new Date().toISOString();
+  // Use WIB timezone for timestamp
+  const now = getWIBDate().toISOString();
   const result = await db.collection<Diagnose>(COLLECTION).insertOne({
     ...diagnose,
     clientId: new ObjectId(diagnose.clientId),
@@ -89,7 +91,7 @@ export const updateDiagnose = async (id: string, data: Partial<Diagnose>) => {
     const update: UpdateFilter<DiagnoseDocument> = {
       $set: {
         ...data,
-        updatedAt: new Date().toISOString(),
+        updatedAt: getWIBDate().toISOString(),
       },
     };
 

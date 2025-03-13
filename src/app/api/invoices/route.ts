@@ -5,6 +5,7 @@ import {
   getAllInvoices,
   getInvoicesByDate,
 } from '@/app/models/invoice';
+import { getWIBDate } from '@/app/utils/date-utils';
 import { canCreateInvoice } from '@/app/utils/server-auth-utils';
 import { InvoiceData, ServiceItem } from '@/data/types';
 import { NextRequest, NextResponse } from 'next/server';
@@ -45,8 +46,8 @@ export async function POST(request: NextRequest) {
 
       await redis.del('invoices');
 
-      // Get current date components
-      const now = new Date();
+      // Get current date components in WIB timezone
+      const now = getWIBDate();
       const year = now.getFullYear();
       const month = String(now.getMonth() + 1).padStart(2, '0');
       const day = String(now.getDate()).padStart(2, '0');
