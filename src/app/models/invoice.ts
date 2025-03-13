@@ -1,6 +1,7 @@
 import { InvoiceData } from '@/data/types';
 import { Db, ObjectId } from 'mongodb';
 import { connectToDatabase } from '../config/config';
+import { getEndOfDay, getStartOfDay, getWIBDate } from '../utils/date-utils';
 
 const DATABASE_NAME = 'terrariavet';
 const COLLECTION = 'invoices';
@@ -13,10 +14,11 @@ export const getDb = async () => {
 
 export const createInvoice = async (invoice: Omit<InvoiceData, '_id'>) => {
   const db = await getDb();
+  const wibDate = getWIBDate();
   const bodyInput = {
     ...invoice,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: wibDate.toISOString(),
+    updatedAt: wibDate.toISOString(),
   };
   const result = await db.collection(COLLECTION).insertOne(bodyInput);
   return result;
@@ -43,10 +45,11 @@ export const getInvoiceById = async (id: string) => {
 export const updateInvoice = async (id: string, data: Partial<InvoiceData>) => {
   const db = await getDb();
 
+  const wibDate = getWIBDate();
   const update = {
     $set: {
       ...data,
-      updatedAt: new Date().toISOString(),
+      updatedAt: wibDate.toISOString(),
     },
   };
 
@@ -76,11 +79,10 @@ export const deleteInvoice = async (id: string) => {
 
 export const getInvoicesByDate = async (date: Date) => {
   const db = await getDb();
-  const startOfDay = new Date(date);
-  startOfDay.setHours(0, 0, 0, 0);
 
-  const endOfDay = new Date(date);
-  endOfDay.setHours(23, 59, 59, 999);
+  // Get start and end of day in WIB timezone
+  const startOfDay = getStartOfDay(date);
+  const endOfDay = getEndOfDay(date);
 
   const invoices = await db
     .collection(COLLECTION)
