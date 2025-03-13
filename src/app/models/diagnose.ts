@@ -19,6 +19,7 @@ export interface Diagnose {
   dogSnapShot: DogSnapShotData;
   symptom: string;
   description: string;
+  temperature: number;
 
   // didefinisikan dari model diagnose.ts
   createdAt: string;
@@ -73,7 +74,7 @@ export const getAllDiagnoses = async () => {
     const diagnoses = await db
       .collection<Diagnose>(COLLECTION)
       .find()
-      .sort({ name: 1 }) // Sort by newest first
+      .sort({ createdAt: -1 }) // Sort by newest first (descending order)
       .toArray();
     return diagnoses;
   } catch {

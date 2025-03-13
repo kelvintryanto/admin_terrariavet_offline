@@ -1,31 +1,30 @@
-import { withAuth } from "@/app/api/middleware";
-import redis from "@/app/config/redis";
+import { withAuth } from '@/app/api/middleware';
+import redis from '@/app/config/redis';
 import {
   CreateDiagnose,
   createDiagnose,
   getAllDiagnoses,
-  getDiagnosesByDate,
-} from "@/app/models/diagnose";
-import { canCreateDiagnose } from "@/app/utils/authCheck";
-import { NextRequest, NextResponse } from "next/server";
+} from '@/app/models/diagnose';
+import { canCreateDiagnose } from '@/app/utils/authCheck';
+import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET() {
   try {
     const diagnoses = await getAllDiagnoses();
 
-    const cachedDiagnoses = await redis.get("diagnoses");
+    const cachedDiagnoses = await redis.get('diagnoses');
 
     if (cachedDiagnoses) {
       return NextResponse.json(JSON.parse(cachedDiagnoses));
     }
 
-    await redis.set("diagnoses", JSON.stringify(diagnoses));
+    await redis.set('diagnoses', JSON.stringify(diagnoses));
 
     return NextResponse.json(diagnoses);
   } catch (error: unknown) {
-    console.error("Failed to fetch diagnoses", error);
+    console.error('Failed to fetch diagnoses', error);
     return NextResponse.json(
-      { error: "Failed to fetch diagnoses" },
+      { error: 'Failed to fetch diagnoses' },
       { status: 500 }
     );
   }
@@ -35,7 +34,7 @@ export async function POST(request: NextRequest) {
   return withAuth(request, async (req, user) => {
     if (!canCreateDiagnose(user.role)) {
       return NextResponse.json(
-        { error: "Access denied. Create diagnose privileges required" },
+        { error: 'Access denied. Create diagnose privileges required' },
         { status: 403 }
       );
     }
@@ -43,7 +42,7 @@ export async function POST(request: NextRequest) {
     try {
       const data = await request.json();
 
-      await redis.del("diagnoses");
+      await redis.del('diagnoses');
 
       /**
        * di post ini bikin DXNumber dan DX datenya
@@ -52,17 +51,32 @@ export async function POST(request: NextRequest) {
       // Get current date components
       const now = new Date();
       const year = now.getFullYear();
-      const month = String(now.getMonth() + 1).padStart(2, "0");
-      const day = String(now.getDate()).padStart(2, "0");
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
 
-      /**
-       * getDiagnosesByDate dibutuhkan untuk memuat diagnose number
-       * buat di model diagnose
-       */
-      const todayDiagnoses = await getDiagnosesByDate(now);
+      // Get all diagnoses to find the matching date pattern
+      const allDiagnoses = await getAllDiagnoses();
 
-      // Get invoices for today to determine the sequence number
-      const sequenceNumber = String(todayDiagnoses.length + 1).padStart(2, "0");
+      // Create the date pattern to match (e.g., "DX/2025/03/14")
+      const datePattern = `DX/${year}/${month}/${day}`;
+
+      // Find the maximum sequence number for the current date
+      let maxSequence = 0;
+      allDiagnoses.forEach((diagnose) => {
+        if (diagnose.dxNumber.startsWith(datePattern)) {
+          // Extract the sequence number from the last part
+          const parts = diagnose.dxNumber.split('/');
+          if (parts.length === 5) {
+            const sequence = parseInt(parts[4], 10);
+            if (!isNaN(sequence) && sequence > maxSequence) {
+              maxSequence = sequence;
+            }
+          }
+        }
+      });
+
+      // Generate the next sequence number
+      const sequenceNumber = String(maxSequence + 1).padStart(2, '0');
 
       // Generate diagnose number
       const diagnoseNo = `DX/${year}/${month}/${day}/${sequenceNumber}`;
@@ -80,9 +94,9 @@ export async function POST(request: NextRequest) {
       const result = await createDiagnose(diagnoseData as CreateDiagnose);
       return NextResponse.json(result, { status: 201 });
     } catch (error: unknown) {
-      console.error("Failed to fetch diagnoses", error);
+      console.error('Failed to fetch diagnoses', error);
       return NextResponse.json(
-        { error: "Failed to fetch diagnoses" },
+        { error: 'Failed to fetch diagnoses' },
         { status: 500 }
       );
     }

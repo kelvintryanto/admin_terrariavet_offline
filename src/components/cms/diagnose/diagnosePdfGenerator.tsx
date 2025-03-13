@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { Diagnose } from "@/app/models/diagnose";
-import { jsPDF } from "jspdf";
+import { Diagnose } from '@/app/models/diagnose';
+import { jsPDF } from 'jspdf';
 
 export async function CreateDiagnosePDFTemplate(
   data: Diagnose
 ): Promise<jsPDF> {
-  if (typeof window === "undefined") {
-    throw new Error("PDF generation is only available in the browser");
+  if (typeof window === 'undefined') {
+    throw new Error('PDF generation is only available in the browser');
   }
 
   return new Promise<jsPDF>(async (resolve, reject) => {
     try {
       // Dynamically import jsPDF
-      const jsPDFModule = await import("jspdf").catch((err) => {
-        console.error("Error importing jsPDF:", err);
-        throw new Error("Failed to load PDF generator");
+      const jsPDFModule = await import('jspdf').catch((err) => {
+        console.error('Error importing jsPDF:', err);
+        throw new Error('Failed to load PDF generator');
       });
 
       // Get the constructor (works with both ESM and CommonJS)
@@ -23,28 +23,28 @@ export async function CreateDiagnosePDFTemplate(
         jsPDFModule.default?.jsPDF || jsPDFModule.default || jsPDFModule.jsPDF;
 
       if (!JsPDF) {
-        throw new Error("Failed to load PDF generator constructor");
+        throw new Error('Failed to load PDF generator constructor');
       }
 
       let pdf: jsPDF;
       try {
         pdf = new JsPDF({
-          orientation: "portrait",
-          unit: "mm",
-          format: "a4",
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4',
         });
       } catch (error) {
-        console.error("Error creating PDF instance:", error);
-        throw new Error("Failed to initialize PDF generator");
+        console.error('Error creating PDF instance:', error);
+        throw new Error('Failed to initialize PDF generator');
       }
 
       if (!pdf) {
-        throw new Error("Failed to create PDF instance");
+        throw new Error('Failed to create PDF instance');
       }
 
       // Ensure invoice number format is correct for display
       const ensureCorrectFormat = (invoiceNo: string) => {
-        return invoiceNo.replace(/_/g, "/");
+        return invoiceNo.replace(/_/g, '/');
       };
 
       // Wrap text operations with error handling
@@ -52,7 +52,7 @@ export async function CreateDiagnosePDFTemplate(
         try {
           operation();
         } catch (error) {
-          console.error("Error in PDF operation:", error);
+          console.error('Error in PDF operation:', error);
         }
       };
 
@@ -61,7 +61,7 @@ export async function CreateDiagnosePDFTemplate(
         text: string,
         x: number,
         y: number,
-        options?: { align?: "left" | "center" | "right" }
+        options?: { align?: 'left' | 'center' | 'right' }
       ) => {
         safePdfOperation(() => {
           pdf.text(text, x, y, options);
@@ -101,45 +101,45 @@ export async function CreateDiagnosePDFTemplate(
 
       // Load and add logo
       const img = new Image();
-      img.crossOrigin = "Anonymous";
+      img.crossOrigin = 'Anonymous';
       img.onload = () => {
         try {
           // Add logo with error handling
-          pdf.addImage(img, "PNG", margin, yPos, 20, 20);
+          pdf.addImage(img, 'PNG', margin, yPos, 20, 20);
         } catch (error) {
-          console.error("Error adding logo to PDF:", error);
+          console.error('Error adding logo to PDF:', error);
         }
         continueWithPDF();
       };
 
       img.onerror = () => {
-        console.warn("Logo image failed to load, continuing without logo");
+        console.warn('Logo image failed to load, continuing without logo');
         continueWithPDF();
       };
 
       // Try to load logo with full URL in production
-      const logoUrl = "/logo.png";
+      const logoUrl = '/logo.png';
 
       img.src = logoUrl;
 
       function continueWithPDF() {
         // Add clinic information
         pdf.setFontSize(10);
-        pdf.setFont("helvetica", "normal");
-        pdf.text("TerrariaVet", pageWidth - margin, yPos + 5, {
-          align: "right",
+        pdf.setFont('helvetica', 'normal');
+        pdf.text('TerrariaVet', pageWidth - margin, yPos + 5, {
+          align: 'right',
         });
         pdf.text(
-          "Jl.Platina 2 No.18 Desa Curug, Kec.Gunung Sindur, Parung",
+          'Jl.Platina 2 No.18 Desa Curug, Kec.Gunung Sindur, Parung',
           pageWidth - margin,
           yPos + 10,
-          { align: "right" }
+          { align: 'right' }
         );
         pdf.text(
-          "Kabupaten Bogor - Jawa Barat 16340",
+          'Kabupaten Bogor - Jawa Barat 16340',
           pageWidth - margin,
           yPos + 15,
-          { align: "right" }
+          { align: 'right' }
         );
 
         // Add header line
@@ -147,96 +147,104 @@ export async function CreateDiagnosePDFTemplate(
 
         // Header
         yPos += 35;
-        pdf.setFont("helvetica", "bold");
+        pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(18);
-        pdf.text("HASIL DIAGNOSA", pageWidth / 2, yPos, { align: "center" });
+        pdf.text('HASIL DIAGNOSA', pageWidth / 2, yPos, { align: 'center' });
 
         // Add invoice number with correct format
         yPos += 7;
         pdf.setFontSize(12);
         pdf.text(ensureCorrectFormat(data.dxNumber), pageWidth / 2, yPos, {
-          align: "center",
+          align: 'center',
         });
 
         // Client Information
         yPos += 10;
         pdf.setFontSize(12);
-        pdf.text("Klien", margin, yPos);
-        pdf.setFont("helvetica", "normal");
+        pdf.text('Klien', margin, yPos);
+        pdf.setFont('helvetica', 'normal');
 
         const addField = (label: string, value: string) => {
-          const maxWidth = pageWidth - margin * 2 - 40; // Maksimal lebar teks
-          const lineHeight = 5; // Spasi antar baris teks
-          let splitLines: string[] = [];
+          // Starting X position for the content (after the label)
+          const contentX = margin + 40;
+          // Maximum width calculation - from content start to right margin
+          const maxWidth = pageWidth - margin - contentX;
+          const lineHeight = 5; // Line spacing
 
-          if (value.includes("\n")) {
-            // Jika ada newline, pecah berdasarkan "\n"
-            splitLines = value.split("\n").map((line) => line.trim());
-          } else if (pdf.getTextWidth(value) > maxWidth) {
-            // Jika teks terlalu panjang, pecah menjadi beberapa baris
-            const words = value.split(" ");
-            let currentLine = "";
+          yPos += 4; // Add space before text
 
-            words.forEach((word) => {
-              const testLine = currentLine + (currentLine ? " " : "") + word;
-              if (pdf.getTextWidth(testLine) < maxWidth) {
-                currentLine = testLine;
-              } else {
-                splitLines.push(currentLine);
-                currentLine = word;
-              }
-            });
-
-            if (currentLine) splitLines.push(currentLine);
-          } else {
-            splitLines = [value]; // Jika teks pendek, langsung masukkan
-          }
-
-          yPos += 4; // Beri jarak sebelum teks
-          checkAndAddPage(splitLines.length * lineHeight + 4); // Pastikan tidak terpotong halaman
-
-          // Tulis label
+          // Write the label
           pdf.text(`${label}:`, margin, yPos);
 
-          // Tulis setiap baris teks hasil pemeriksaan dengan yPos yang selalu turun
-          splitLines.forEach((line, index) => {
-            pdf.text(line, margin + 40, yPos + index * lineHeight);
+          // Process text with manual line breaks
+          let allLines: string[] = [];
+
+          // First split by manual line breaks
+          const paragraphs = value.split('\n');
+
+          // Then apply wrapping to each paragraph and collect all lines
+          paragraphs.forEach((paragraph) => {
+            // @ts-expect-error - splitTextToSize exists in jsPDF but TypeScript definitions might be outdated
+            const wrappedLines = pdf.splitTextToSize(paragraph, maxWidth);
+            allLines = allLines.concat(wrappedLines);
           });
 
-          // Tambahkan garis di bawah teks terakhir
-          drawLine(yPos + splitLines.length * lineHeight);
+          // Check if we need a page break based on the number of lines
+          checkAndAddPage(allLines.length * lineHeight + 4);
 
-          // Update yPos setelah teks terakhir
-          yPos += splitLines.length * lineHeight + 3;
+          // Render each line
+          allLines.forEach((line: string, index: number) => {
+            // Check if this specific line will cause a page overflow
+            if (yPos + index * lineHeight > pageHeight - margin) {
+              pdf.addPage();
+              pageNumber++;
+              // Reset to top of page with some margin
+              yPos = margin;
+            }
+
+            pdf.text(line, contentX, yPos + index * lineHeight);
+          });
+
+          // Add a line below the text - ensure it spans the full width from left to right margin
+          drawLine(yPos + allLines.length * lineHeight);
+
+          // Update yPos for the next field
+          yPos += allLines.length * lineHeight + 3;
         };
 
         yPos += 5;
-        addField("Nama", data.clientSnapShot?.name || "-");
-        addField("Kontak", data.clientSnapShot?.phone || "-");
-        addField("Pet", data.dogSnapShot?.name || "-");
+        addField('Nama', data.clientSnapShot?.name || '-');
+        addField('Kontak', data.clientSnapShot?.phone || '-');
+        addField('Pet', data.dogSnapShot?.name || '-');
 
         // Medical Information
         yPos += 10;
         checkAndAddPage(20);
-        pdf.setFont("helvetica", "bold");
-        pdf.text("Informasi Perawatan", margin, yPos);
-        pdf.setFont("helvetica", "normal");
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Informasi Perawatan', margin, yPos);
+        pdf.setFont('helvetica', 'normal');
 
         yPos += 5;
         addField(
-          "Tanggal Perawatan",
-          `${new Date(data.dxDate).toLocaleDateString("id-ID", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          })}` || "-"
+          'Tanggal Perawatan',
+          `${new Date(data.dxDate).toLocaleDateString('id-ID', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}` || '-'
         );
-        addField("Dokter", `${data.doctorName}` || "-");
-        addField("Gejala", `${data.symptom}` || "-");
-        addField("Hasil Pemeriksaan", `${data.description}` || "-");
+        addField('Dokter', `${data.doctorName}` || '-');
+        // Add temperature with one decimal place
+        const temperatureText =
+          data.temperature !== undefined && data.temperature !== null
+            ? `${data.temperature.toFixed(1)} °C`
+            : 'Tidak ada data';
+        addField('Suhu', temperatureText);
+        addField('Gejala', `${data.symptom}` || '-');
+        addField('Hasil Pemeriksaan', `${data.description}` || '-');
 
         // Add page number
         for (let i = 1; i <= pageNumber; i++) {
@@ -244,7 +252,7 @@ export async function CreateDiagnosePDFTemplate(
             pdf.setPage(i);
             pdf.setFontSize(10);
             safeText(String(i), pageWidth - 10, pageHeight - 10, {
-              align: "right",
+              align: 'right',
             });
           });
         }
@@ -253,9 +261,9 @@ export async function CreateDiagnosePDFTemplate(
         const originalSave = pdf.save;
         pdf.save = function (filename: string) {
           try {
-            const blob = this.output("blob");
+            const blob = this.output('blob');
             const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
+            const link = document.createElement('a');
             link.href = url;
             link.download = filename;
             document.body.appendChild(link);
@@ -263,7 +271,7 @@ export async function CreateDiagnosePDFTemplate(
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
           } catch (error) {
-            console.error("Error in PDF save:", error);
+            console.error('Error in PDF save:', error);
             originalSave.call(this, filename);
           }
         };
@@ -271,7 +279,7 @@ export async function CreateDiagnosePDFTemplate(
         resolve(pdf);
       }
     } catch (error) {
-      console.error("Error in PDF generation:", error);
+      console.error('Error in PDF generation:', error);
       reject(error);
     }
   });

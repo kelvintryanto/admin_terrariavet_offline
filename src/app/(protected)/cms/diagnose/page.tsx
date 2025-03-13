@@ -1,15 +1,12 @@
-"use client";
+'use client';
 
-import { Diagnose } from "@/app/models/diagnose";
-import AddDiagnose from "@/components/cms/diagnose/AddDiagnose";
-import DiagnoseTable from "@/components/cms/diagnose/DiagnoseTable";
-import { Input } from "@/components/ui/input";
-
-import { TableSkeleton } from "@/components/ui/skeleton-table";
-
-import { useToast } from "@/hooks/use-toast";
-import { Stethoscope } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Diagnose } from '@/app/models/diagnose';
+import AddDiagnose from '@/components/cms/diagnose/AddDiagnose';
+import DiagnoseTable from '@/components/cms/diagnose/DiagnoseTable';
+import { Input } from '@/components/ui/input';
+import { TableSkeleton } from '@/components/ui/skeleton-table';
+import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
 
 const useDebounce = <T,>(value: T, delay: number): T => {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
@@ -28,7 +25,7 @@ const useDebounce = <T,>(value: T, delay: number): T => {
 };
 
 export default function DiagnosePage() {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [filteredDiagnoses, setFilteredDiagnoses] = useState<Diagnose[]>([]);
   const [diagnoses, setDiagnoses] = useState<Diagnose[]>([]);
   const [loading, setLoading] = useState(true);
@@ -41,15 +38,15 @@ export default function DiagnosePage() {
 
   const fetchDiagnoses = async () => {
     try {
-      const response = await fetch("/api/diagnoses");
+      const response = await fetch('/api/diagnoses');
       const data = await response.json();
       setDiagnoses(data);
       setFilteredDiagnoses(data);
     } catch {
       toast({
-        title: "Error",
-        description: "Gagal mengambil data diagnosa",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Gagal mengambil data diagnosa',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -86,13 +83,13 @@ export default function DiagnosePage() {
       <div className="w-full">
         <div className="mb-6 flex flex-col md:flex-row items-center justify-between">
           <h1 className="text-2xl font-bold mb-4 flex items-center gap-3">
-            <Stethoscope /> Diagnosa
+            Diagnosa
           </h1>
           <div className="flex flex-col md:flex-row gap-2 w-full md:w-fit">
             <div className="relative w-full sm:w-64">
               <Input
                 type="text"
-                placeholder="Cari kategori..."
+                placeholder="Cari diagnosa..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"

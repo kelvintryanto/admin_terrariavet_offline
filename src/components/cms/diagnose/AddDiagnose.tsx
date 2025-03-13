@@ -83,12 +83,21 @@ export default function AddDiagnose({
     };
 
     const formData = new FormData(e.currentTarget);
+    const temperatureValue = formData.get('temperature') as string;
+    // Ensure temperature has exactly one decimal place
+    let parsedTemperature = parseFloat(temperatureValue);
+    if (!isNaN(parsedTemperature)) {
+      // Round to 1 decimal place
+      parsedTemperature = Math.round(parsedTemperature * 10) / 10;
+    }
+
     const body = {
       doctorName: formData.get('doctorName') as string,
       clientId: selectedCustomer?._id.toString() as string,
       clientSnapShot: clientData as ClientSnapShotData,
       dogId: selectedDog?._id.toString() as string,
       dogSnapShot: dogData as DogSnapShotData,
+      temperature: isNaN(parsedTemperature) ? 0 : parsedTemperature,
       symptom: formData.get('symptom') as string,
       description: formData.get('description') as string,
     };
@@ -293,6 +302,39 @@ export default function AddDiagnose({
                 </div>
               </>
             )}
+
+            <div className="grid gap-2">
+              <Label htmlFor="temperature">Suhu (°C)</Label>
+              <Input
+                id="temperature"
+                name="temperature"
+                type="number"
+                step="0.1"
+                placeholder="37.0"
+                onInput={(e) => {
+                  const target = e.target as HTMLInputElement;
+                  const value = target.value;
+                  // First, remove any invalid characters for numbers
+                  let sanitizedValue = value.replace(/[^0-9.]/g, '');
+
+                  // Ensure there's at most one decimal point
+                  const parts = sanitizedValue.split('.');
+                  if (parts.length > 2) {
+                    sanitizedValue = parts[0] + '.' + parts.slice(1).join('');
+                  }
+
+                  // If there's a decimal point, limit to 1 decimal place
+                  if (parts.length === 2 && parts[1].length > 1) {
+                    sanitizedValue = parts[0] + '.' + parts[1].substring(0, 1);
+                  }
+
+                  // Update the input value if it's different from the original
+                  if (value !== sanitizedValue) {
+                    target.value = sanitizedValue;
+                  }
+                }}
+              />
+            </div>
 
             <div className="grid gap-2">
               <Label htmlFor="symptom">Keluhan</Label>

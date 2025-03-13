@@ -34,6 +34,7 @@ export default function EditDiagnosePage({
     doctorName: '',
     symptom: '',
     description: '',
+    temperature: 0,
   });
   const [initialCustomerName, setInitialCustomerName] = useState('');
   const [initialDogName, setInitialDogName] = useState('');
@@ -51,6 +52,7 @@ export default function EditDiagnosePage({
           doctorName: data.doctorName,
           symptom: data.symptom,
           description: data.description,
+          temperature: data.temperature || 0,
         });
         setInitialCustomerName(data.clientSnapShot.name);
         setInitialDogName(data.dogSnapShot.name);
@@ -95,6 +97,22 @@ export default function EditDiagnosePage({
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+
+    // Special handling for temperature to ensure one decimal place
+    if (name === 'temperature') {
+      const parsedValue = parseFloat(value);
+      if (!isNaN(parsedValue)) {
+        // Round to 1 decimal place
+        const roundedValue = Math.round(parsedValue * 10) / 10;
+        setFormData((prev) => ({
+          ...prev,
+          [name]: roundedValue,
+        }));
+        return;
+      }
+    }
+
+    // Default handling for other fields
     setFormData((prev) => ({
       ...prev,
       [name]: value,
@@ -127,6 +145,7 @@ export default function EditDiagnosePage({
         dogSnapShot: selectedDog || diagnose?.dogSnapShot,
         symptom: formData.symptom,
         description: formData.description,
+        temperature: formData.temperature,
       };
 
       const response = await fetch(`/api/diagnoses/${id}`, {
@@ -233,6 +252,42 @@ export default function EditDiagnosePage({
                   Dogs={dogs}
                   onSelect={handleSelectDog}
                   initialValue={initialDogName}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="temperature">Suhu (°C)</Label>
+                <Input
+                  id="temperature"
+                  name="temperature"
+                  type="number"
+                  step="0.1"
+                  placeholder="37.0"
+                  value={formData.temperature}
+                  onChange={handleInputChange}
+                  onInput={(e) => {
+                    const target = e.target as HTMLInputElement;
+                    const value = target.value;
+                    // First, remove any invalid characters for numbers
+                    let sanitizedValue = value.replace(/[^0-9.]/g, '');
+
+                    // Ensure there's at most one decimal point
+                    const parts = sanitizedValue.split('.');
+                    if (parts.length > 2) {
+                      sanitizedValue = parts[0] + '.' + parts.slice(1).join('');
+                    }
+
+                    // If there's a decimal point, limit to 1 decimal place
+                    if (parts.length === 2 && parts[1].length > 1) {
+                      sanitizedValue =
+                        parts[0] + '.' + parts[1].substring(0, 1);
+                    }
+
+                    // Update the input value if it's different from the original
+                    if (value !== sanitizedValue) {
+                      target.value = sanitizedValue;
+                    }
+                  }}
                 />
               </div>
 
