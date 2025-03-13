@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from "react";
 
 // Define global grecaptcha type
 declare global {
@@ -12,9 +12,9 @@ declare global {
         parameters: {
           sitekey: string;
           callback: (token: string) => void;
-          'expired-callback'?: () => void;
-          theme?: 'light' | 'dark';
-          size?: 'normal' | 'compact';
+          "expired-callback"?: () => void;
+          theme?: "light" | "dark";
+          size?: "normal" | "compact";
         }
       ) => number;
       reset: (widgetId?: number) => void;
@@ -27,15 +27,15 @@ declare global {
 interface ReCaptchaProps {
   onVerify: (token: string) => void;
   onExpired?: () => void;
-  theme?: 'light' | 'dark';
-  size?: 'normal' | 'compact';
+  theme?: "light" | "dark";
+  size?: "normal" | "compact";
 }
 
 const ReCaptcha = ({
   onVerify,
   onExpired,
-  theme = 'light',
-  size = 'normal',
+  theme = "light",
+  size = "normal",
 }: ReCaptchaProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<number | null>(null);
@@ -49,7 +49,7 @@ const ReCaptcha = ({
   // Load the reCAPTCHA script with error handling and retries
   useEffect(() => {
     // Skip if running in SSR
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     let retryCount = 0;
     const MAX_RETRIES = 2;
@@ -67,7 +67,7 @@ const ReCaptcha = ({
         scriptRef.current.parentNode.removeChild(scriptRef.current);
       }
 
-      const script = document.createElement('script');
+      const script = document.createElement("script");
       script.src = `https://www.google.com/recaptcha/api.js?render=explicit&onload=onRecaptchaLoad`;
       script.async = true;
       script.defer = true;
@@ -83,7 +83,7 @@ const ReCaptcha = ({
           // Retry with exponential backoff
           setTimeout(loadScript, RETRY_DELAY * retryCount);
         } else {
-          setLoadError('Failed to load reCAPTCHA after multiple attempts');
+          setLoadError("Failed to load reCAPTCHA after multiple attempts");
           // Continue without reCAPTCHA - this will let the form work without it in case of network issues
         }
       };
@@ -103,17 +103,17 @@ const ReCaptcha = ({
   useEffect(() => {
     // Skip if running in SSR or script not loaded or widget already rendered
     if (
-      typeof window === 'undefined' ||
+      typeof window === "undefined" ||
       !isScriptLoaded ||
       isWidgetRendered ||
       loadError
     )
       return;
 
-    const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
+    const siteKey = process.env.RECAPTCHA_SITE_KEY;
     if (!siteKey) {
-      console.error('NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not defined');
-      setLoadError('reCAPTCHA site key is missing');
+      console.error("RECAPTCHA_SITE_KEY is not defined");
+      setLoadError("reCAPTCHA site key is missing");
       return;
     }
 
@@ -123,12 +123,12 @@ const ReCaptcha = ({
         if (
           containerRef.current &&
           window.grecaptcha &&
-          typeof window.grecaptcha.render === 'function'
+          typeof window.grecaptcha.render === "function"
         ) {
           widgetIdRef.current = window.grecaptcha.render(containerRef.current, {
             sitekey: siteKey,
             callback: onVerify,
-            'expired-callback': onExpired,
+            "expired-callback": onExpired,
             theme,
             size,
           });
@@ -137,15 +137,15 @@ const ReCaptcha = ({
       } catch (error) {
         // If error is about already being rendered, we can ignore it
         const errorMsg = error instanceof Error ? error.message : String(error);
-        if (!errorMsg.includes('already been rendered')) {
-          console.error('Error rendering reCAPTCHA:', error);
-          setLoadError('Error rendering reCAPTCHA widget');
+        if (!errorMsg.includes("already been rendered")) {
+          console.error("Error rendering reCAPTCHA:", error);
+          setLoadError("Error rendering reCAPTCHA widget");
         }
       }
     };
 
     // Ensure grecaptcha is fully loaded
-    if (window.grecaptcha && typeof window.grecaptcha.render === 'function') {
+    if (window.grecaptcha && typeof window.grecaptcha.render === "function") {
       renderWidget();
     } else {
       // If not ready, wait for it
@@ -155,7 +155,7 @@ const ReCaptcha = ({
       intervalRef.current = setInterval(() => {
         if (
           window.grecaptcha &&
-          typeof window.grecaptcha.render === 'function'
+          typeof window.grecaptcha.render === "function"
         ) {
           if (intervalRef.current) {
             clearInterval(intervalRef.current);
@@ -177,7 +177,7 @@ const ReCaptcha = ({
           intervalRef.current = null;
 
           // Set error state so we can show a fallback UI
-          setLoadError('reCAPTCHA initialization timed out');
+          setLoadError("reCAPTCHA initialization timed out");
 
           // Notify user via onExpired callback if provided
           if (onExpired) {
@@ -215,7 +215,7 @@ const ReCaptcha = ({
       if (
         widgetIdRef.current !== null &&
         window.grecaptcha &&
-        typeof window.grecaptcha.reset === 'function'
+        typeof window.grecaptcha.reset === "function"
       ) {
         try {
           window.grecaptcha.reset(widgetIdRef.current);
