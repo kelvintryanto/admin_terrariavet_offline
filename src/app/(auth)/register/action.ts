@@ -1,9 +1,7 @@
 'use server';
 
 import redis from '@/app/config/redis';
-import { createCustomer } from '@/app/models/customer';
-import { getUserByEmail } from '@/app/models/user';
-import { redirect } from 'next/navigation';
+import { createCustomer, getCustomerByEmail } from '@/app/models/customer';
 import { z } from 'zod';
 
 const registerSchema = z
@@ -20,11 +18,60 @@ const registerSchema = z
     path: ['confirmPassword'],
   });
 
+// Function to verify reCAPTCHA token
+async function verifyRecaptcha(token: string): Promise<boolean> {
+  try {
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+
+    if (!secretKey) {
+      console.error('reCAPTCHA secret key is not defined');
+      return false;
+    }
+
+    const response = await fetch(
+      'https://www.google.com/recaptcha/api/siteverify',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          secret: secretKey,
+          response: token,
+        }),
+      }
+    );
+
+    const data = await response.json();
+    return data.success;
+  } catch (error) {
+    console.error('Error verifying reCAPTCHA:', error);
+    return false;
+  }
+}
+
 export async function registerAction(
-  state: { error: string | null; success: boolean; pending: boolean },
+  prevState: {
+    error: string;
+    success: boolean;
+    pending: boolean;
+  },
   formData: FormData
 ) {
   try {
+    // Verify reCAPTCHA token
+    const recaptchaToken = formData.get('recaptchaToken') as string;
+    const isValidToken = await verifyRecaptcha(recaptchaToken);
+
+    if (!isValidToken) {
+      return {
+        ...prevState,
+        pending: false,
+        error: 'Verifikasi reCAPTCHA gagal. Silakan coba lagi.',
+        success: false,
+      };
+    }
+
     const data = {
       name: formData.get('name'),
       email: formData.get('email'),
@@ -33,21 +80,11 @@ export async function registerAction(
       address: formData.get('address'),
       confirmPassword: formData.get('confirmPassword'),
     };
-
-    console.log('Registration Data:', {
-      name: data.name,
-      email: data.email,
-      hasPassword: !!data.password,
-      phone: data.phone,
-      address: data.address,
-    });
-
     const parsedData = registerSchema.safeParse(data);
 
     if (!parsedData.success) {
       // Format the Zod error messages to be more user-friendly
       const formattedErrors = parsedData.error.format();
-      console.log('Validation errors:', formattedErrors);
 
       // Extract all error messages
       const errorMessages: string[] = [];
@@ -79,20 +116,27 @@ export async function registerAction(
       // Join all errors with line breaks for better readability
       const errorMessage = errorMessages.join(' | ');
 
-      return redirect(
-        `/register?error=${encodeURIComponent(
-          errorMessage || 'Mohon periksa kembali data yang Anda masukkan'
-        )}`
-      );
+      // Instead of redirect, return validation errors
+      return {
+        ...prevState,
+        pending: false,
+        error: errorMessage || 'Mohon periksa kembali data yang Anda masukkan',
+        success: false,
+      };
     }
 
-    const existingUser = await getUserByEmail(parsedData.data.email as string);
+    const existingUser = await getCustomerByEmail(
+      parsedData.data.email as string
+    );
     if (existingUser) {
-      return redirect(
-        `/register?error=${encodeURIComponent(
-          'Email sudah terdaftar. Silakan gunakan email lain atau login dengan email tersebut.'
-        )}`
-      );
+      // Instead of redirect, return error about existing user
+      return {
+        ...prevState,
+        pending: false,
+        error:
+          'Email sudah terdaftar. Silakan gunakan email lain atau login dengan email tersebut.',
+        success: false,
+      };
     }
 
     const customerInput = {
@@ -110,16 +154,22 @@ export async function registerAction(
 
     await redis.del('customers');
 
-    return redirect('/login');
+    // Return success flag - client will handle the redirect
+    return {
+      ...prevState,
+      pending: false,
+      error: '',
+      success: true,
+    };
   } catch (error) {
     console.error('Registration error:', error);
-    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
-      throw error;
-    }
-    return redirect(
-      `/register?error=${encodeURIComponent(
-        'Terjadi kesalahan saat pendaftaran. Silakan coba kembali.'
-      )}`
-    );
+
+    // Return error state
+    return {
+      ...prevState,
+      pending: false,
+      error: 'Terjadi kesalahan saat pendaftaran. Silakan coba kembali.',
+      success: false,
+    };
   }
 }

@@ -1,11 +1,12 @@
 'use client';
 
+import ReCaptcha from '@/components/ReCaptcha';
 import { motion } from 'framer-motion';
 import { ClipboardPlus, HandHeart } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { useActionState, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useActionState, useEffect, useState, useTransition } from 'react';
 import { registerAction } from './action';
 
 const formVariants = {
@@ -86,15 +87,25 @@ const formFields = [
 ];
 
 const Register = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const error = searchParams.get('error');
-  const [state, dispatch] = useActionState(registerAction, {
-    error: null,
+
+  const [state, formAction] = useActionState(registerAction, {
+    error: '',
     success: false,
     pending: false,
   });
 
   const [isMobile, setIsMobile] = useState(false);
+  const [recaptchaToken, setRecaptchaToken] = useState<string>('');
+  const [recaptchaError, setRecaptchaError] = useState<string | null>(null);
+  const [showRecaptcha, setShowRecaptcha] = useState(false);
+  const [formData, setFormData] = useState<FormData | null>(null);
+  const [isPending, startTransition] = useTransition();
+
+  // State to track if we need to reset form errors
+  const [inputChanged, setInputChanged] = useState(false);
 
   useEffect(() => {
     setIsMobile(window.innerWidth <= 1024);
@@ -107,6 +118,12 @@ const Register = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    if (state.success) {
+      router.push('/login');
+    }
+  }, [state.success, router]);
+
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [filledInputs, setFilledInputs] = useState<{ [key: string]: boolean }>(
     Object.fromEntries(formFields.map((field) => [field.id, false]))
@@ -115,12 +132,99 @@ const Register = () => {
   const handleFocus = (id: string) => setFocusedInput(id);
   const handleBlur = () => setFocusedInput(null);
 
+  const handleVerify = (token: string) => {
+    setRecaptchaToken(token);
+    setRecaptchaError(null);
+
+    // Submit the form automatically when reCAPTCHA is verified
+    if (formData && token) {
+      const newFormData = new FormData();
+
+      // Copy all entries from the stored formData
+      for (const [key, value] of formData.entries()) {
+        newFormData.append(key, value);
+      }
+
+      newFormData.append('recaptchaToken', token);
+
+      // Wrap in startTransition to avoid the error
+      startTransition(() => {
+        formAction(newFormData);
+      });
+    }
+  };
+
+  // Function to reset form state and clear errors
+  const resetFormState = () => {
+    // Reset the server action state with an empty form
+    if (state.error) {
+      startTransition(() => {
+        formAction(new FormData());
+      });
+    }
+
+    // Clear any reCAPTCHA errors but keep the reCAPTCHA visible if it's already showing
+    if (recaptchaError) {
+      setRecaptchaError(null);
+    }
+
+    // Mark that input has changed to allow resubmission
+    setInputChanged(true);
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilledInputs((prev) => ({
       ...prev,
       [e.target.id]: e.target.value.length > 0,
     }));
+
+    // When user is correcting inputs, disable reCAPTCHA and reset to initial state
+    if (showRecaptcha) {
+      setShowRecaptcha(false);
+      setRecaptchaToken('');
+      setRecaptchaError(null);
+    }
+
+    // Reset form state when input changes
+    resetFormState();
   };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    // Reset the inputChanged flag
+    setInputChanged(false);
+
+    // Clear any reCAPTCHA errors
+    if (recaptchaError) {
+      setRecaptchaError(null);
+    }
+
+    // Store the form data for later submission
+    const form = event.currentTarget;
+    setFormData(new FormData(form));
+
+    // Show the reCAPTCHA
+    setShowRecaptcha(true);
+  };
+
+  // Single useEffect to handle error state resetting
+  useEffect(() => {
+    // If inputs changed and there are errors, clear errors on next render/submission
+    if (inputChanged && (state.error || recaptchaError)) {
+      // Reset server action errors
+      if (state.error) {
+        startTransition(() => {
+          formAction(new FormData()); // Send empty form to reset state
+        });
+      }
+
+      // Clear reCAPTCHA errors if present
+      if (recaptchaError) {
+        setRecaptchaError(null);
+      }
+    }
+  }, [inputChanged, state.error, recaptchaError, formAction]);
 
   return (
     <div className="flex min-h-screen bg-gradient-to-b from-violet-800/80 via-[#6032A2] to-[#371D5C]">
@@ -196,32 +300,50 @@ const Register = () => {
               </p>
             </motion.div>
 
-            {error && (
+            {/* Show either URL error parameter or state error */}
+            {(error || state.error) && !recaptchaError && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="rounded-lg bg-red-500/10 p-4 text-sm text-red-200 border border-red-500/20"
               >
-                {error.includes('|') ? (
-                  <div className="space-y-1">
-                    <p className="font-medium mb-2">Ada beberapa kesalahan:</p>
-                    <ul className="list-disc pl-5 space-y-1">
-                      {decodeURIComponent(error)
-                        .split('|')
-                        .map((err, index) => (
-                          <li key={index} className="text-xs">
-                            {err.trim()}
-                          </li>
-                        ))}
-                    </ul>
-                  </div>
+                {error ? (
+                  error.includes('|') ? (
+                    <div className="space-y-1">
+                      <p className="font-medium mb-2">
+                        Ada beberapa kesalahan:
+                      </p>
+                      <ul className="list-disc pl-5 space-y-1">
+                        {decodeURIComponent(error)
+                          .split('|')
+                          .map((err, index) => (
+                            <li key={index} className="text-xs">
+                              {err.trim()}
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  ) : (
+                    decodeURIComponent(error)
+                  )
                 ) : (
-                  decodeURIComponent(error)
+                  state.error
                 )}
               </motion.div>
             )}
 
-            <form action={dispatch} className="space-y-4">
+            {/* Show recaptcha error separately */}
+            {recaptchaError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-lg bg-red-500/10 p-4 text-sm text-red-200 border border-red-500/20"
+              >
+                {recaptchaError}
+              </motion.div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-4">
                 {formFields.map((field, index) => (
                   <motion.div
@@ -259,15 +381,56 @@ const Register = () => {
                 ))}
               </div>
 
-              <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                type="submit"
-                disabled={state.pending}
-                className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-3 font-medium text-white hover:from-orange-600 hover:to-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 focus:ring-offset-violet-800 disabled:opacity-50 mt-6"
-              >
-                {state.pending ? 'Mendaftar...' : 'Daftar'}
-              </motion.button>
+              {/* Show reCAPTCHA only when showRecaptcha is true */}
+              {showRecaptcha && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4"
+                >
+                  <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                    <h3 className="text-center text-white text-sm mb-3">
+                      Mohon verifikasi bahwa Anda bukan robot
+                    </h3>
+                    <div className="flex justify-center items-center w-full overflow-hidden px-2">
+                      <ReCaptcha
+                        onVerify={handleVerify}
+                        onExpired={() => {
+                          setRecaptchaToken('');
+                          setRecaptchaError(
+                            'Verifikasi reCAPTCHA telah kedaluwarsa. Silakan verifikasi kembali.'
+                          );
+                        }}
+                        size={isMobile ? 'compact' : 'normal'}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              <div className="flex justify-center">
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  type="submit"
+                  disabled={
+                    state.pending ||
+                    isPending ||
+                    (showRecaptcha && !recaptchaToken)
+                  }
+                  className={`w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-3 font-medium text-white hover:from-orange-600 hover:to-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 focus:ring-offset-violet-800 disabled:opacity-50 mt-6 ${
+                    showRecaptcha ? 'ml-2' : ''
+                  }`}
+                >
+                  {state.pending || isPending
+                    ? 'Memproses...'
+                    : showRecaptcha && !recaptchaToken
+                    ? 'Mohon Verifikasi reCAPTCHA'
+                    : showRecaptcha && recaptchaToken
+                    ? 'Memvalidasi Data...'
+                    : 'Daftar'}
+                </motion.button>
+              </div>
             </form>
 
             <motion.div

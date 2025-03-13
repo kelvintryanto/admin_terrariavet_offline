@@ -118,8 +118,6 @@ export async function loginAction(
     googleUser: userData.googleUser || false,
   });
 
-  console.log(token, 'token');
-
   // Set cookie
   ((await cookies()) as unknown as ResponseCookies).set('token', token, {
     httpOnly: true,
