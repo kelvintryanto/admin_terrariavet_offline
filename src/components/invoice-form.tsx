@@ -25,7 +25,6 @@ import type {
 } from '../data/types';
 import { ProductSearch } from './cms/invoice/product-search';
 import { ServiceSearch } from './cms/invoice/service-search';
-import { createPDFTemplate } from './pdfgenerator';
 
 // Helper function to format date from YYYY-MM-DD to DD-MM-YYYY
 const formatDate = (dateString: string | undefined) => {
@@ -596,8 +595,6 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
         throw new Error('Failed to save invoice');
       }
 
-      const result = await response.json();
-
       // Update product stock for each cart item
       if (formData.cartItems.length > 0) {
         // Create an array of product updates
@@ -621,16 +618,6 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
           // We don't want to block the invoice creation if stock update fails
         }
       }
-
-      // Get the created invoice data
-      const createdInvoice = await fetch(
-        `/api/invoices/${result.insertedId}`
-      ).then((res) => res.json());
-
-      // Generate PDF with the correct invoice number
-      const pdf = await createPDFTemplate(createdInvoice);
-      // Use the original invoice number for the filename
-      pdf.save(`${createdInvoice.invoiceNo}.pdf`);
 
       toast({
         title: 'Success',

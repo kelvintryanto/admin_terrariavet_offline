@@ -103,8 +103,8 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
       img.crossOrigin = 'Anonymous';
       img.onload = () => {
         try {
-          // Add logo with error handling
-          pdf.addImage(img, 'PNG', margin, yPos, 20, 20);
+          // Add logo with error handling - move it down by 10 units
+          pdf.addImage(img, 'PNG', margin, yPos + 5, 20, 20);
         } catch (error) {
           console.error('Error adding logo to PDF:', error);
         }
@@ -142,18 +142,32 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
           yPos + 15,
           { align: 'right' }
         );
+        // Add phone numbers
+        pdf.text(
+          '0811 1901 755   |   0811 800 790',
+          pageWidth - margin,
+          yPos + 20,
+          {
+            align: 'right',
+          }
+        );
+        // Add bank account information
+        pdf.text('BANK BCA : 4970343771', pageWidth - margin, yPos + 25, {
+          align: 'right',
+        });
 
-        // Add header line - reduced from 45 to 40
-        pdf.line(margin, 40, pageWidth - margin, 40);
+        // Add header line - make it relative to yPos instead of fixed at 40
+        pdf.line(margin, yPos + 28, pageWidth - margin, yPos + 28);
 
-        // Header - reduced from 40 to 35
-        yPos += 35;
+        // Header - adjust starting position based on the new line position
+        // Increased from 35 to 45 to add more space after the line
+        yPos += 45; // This now means yPos + 30 (line) + 15 (space)
         pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(18);
+        pdf.setFontSize(14);
         pdf.text('INVOICE PERAWATAN', pageWidth / 2, yPos, { align: 'center' });
 
         // Add invoice number with correct format - reduced from 5 to 4
-        yPos += 4;
+        yPos += 5;
         pdf.setFontSize(12);
         pdf.text(ensureCorrectFormat(data.invoiceNo), pageWidth / 2, yPos, {
           align: 'center',
@@ -174,21 +188,24 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
           const colonX = margin + 45; // Position for the colon
           const valueX = margin + 50; // Position for the value
 
+          pdf.setFontSize(10);
           pdf.text(label, labelX, yPos);
           pdf.text(':', colonX, yPos);
           pdf.text(value || '-', valueX, yPos);
 
-          drawLine(yPos + 3);
+          // Reduce spacing between text and line from 3 to 2
+          drawLine(yPos + 2);
         };
 
         addField('Nama', data.clientName || '-');
         addField('Kontak', data.contact || '-');
-        addField('Sub Akun', data.subAccount || '-');
+        addField('Nama Anjing', data.subAccount || '-');
 
         // Booking Information - reduced from 15 to 12
         yPos += 12;
         checkAndAddPage(20);
         pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(12);
         pdf.text('Informasi Perawatan', margin, yPos);
         pdf.setFont('helvetica', 'normal');
 
@@ -213,6 +230,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
         yPos += 15;
         checkAndAddPage(20);
         pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(12);
         pdf.text('Servis', margin, yPos);
         pdf.setFont('helvetica', 'normal');
 
@@ -224,7 +242,6 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
           // Show "No data" message instead of table headers
           yPos += 4; // Reduced from 8 to 4 to be closer to the header
           pdf.text('Tidak ada data', margin, yPos);
-          yPos += 6; // Reduced from 10 to 6
         } else {
           const serviceHeaders = ['Nama', 'Tanggal', 'Harga'];
           // Calculate total available width and distribute it evenly for 3 columns
@@ -237,17 +254,16 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
           const startX = margin;
           const maxServiceNameWidth = serviceColWidths[0] - 5; // Leave some padding
 
-          // Draw header line with more compact spacing
-          drawLine(yPos - 1); // Reduced from -2
+          // Draw header line with more compact spacing - reduce spacing before headers
+          drawLine(yPos - 0.5); // Reduced from -1
 
           // Print headers with reduced spacing
-          yPos += 4; // Reduced from 6
+          yPos += 3; // Reduced from 4 to bring headers closer to the line
 
           // Use normal font with slightly larger size instead of bold for a semi-bold effect
           pdf.setFont('helvetica', 'normal');
-          // Store current font size and set a slightly larger one
-          const headerFontSize = 12.5; // Slightly larger than the default 12
-          pdf.setFontSize(headerFontSize);
+          // Set consistent font size 10 for headers
+          pdf.setFontSize(10);
 
           // Fixed positions for better alignment - evenly distributed
           let posX = startX;
@@ -264,14 +280,13 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
             align: 'right',
           });
 
-          // Reset font size to normal
-          const defaultFontSize = 12; // Reset to default size
-          pdf.setFontSize(defaultFontSize);
+          // Keep font size at 10 for content
+          pdf.setFontSize(10);
 
-          // Draw line after headers with more compact spacing - match the spacing in Cart Items table
-          yPos += 2; // Changed from 1 to 2 to match Cart Items table
+          // Draw line after headers with more compact spacing
+          yPos += 1.5; // Reduced from 2 to bring line closer to headers
           drawLine(yPos);
-          yPos += 2; // Changed from 1 to 2 to match Cart Items table
+          yPos += 1.5; // Reduced from 2 to bring content closer to line
 
           // Print service items with more compact spacing
           data.services.forEach((service) => {
@@ -279,20 +294,20 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
             checkAndAddPage(10); // Reduced from 12
             let itemX = startX;
 
+            // Explicitly set font size to 10 for all service items
+            pdf.setFontSize(10);
+
             // Service name - keep on single line by adjusting font size if needed
             const serviceNameWidth = pdf.getTextWidth(service.name);
             if (serviceNameWidth > maxServiceNameWidth) {
               // Calculate and set a smaller font size to fit the text
               const scaleFactor = maxServiceNameWidth / serviceNameWidth;
-              const newFontSize = Math.max(
-                7,
-                Math.floor(defaultFontSize * scaleFactor)
-              ); // Don't go smaller than 7pt
+              const newFontSize = Math.max(7, Math.floor(10 * scaleFactor)); // Don't go smaller than 7pt
 
               // Set smaller size, render text, then restore
               pdf.setFontSize(newFontSize);
               pdf.text(service.name, itemX, yPos);
-              pdf.setFontSize(defaultFontSize); // Restore original font size
+              pdf.setFontSize(10); // Restore to exactly 10
             } else {
               pdf.text(service.name, itemX, yPos);
             }
@@ -331,6 +346,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
         yPos += 10; // Consistent spacing between sections
         checkAndAddPage(15); // Reduced from 20
         pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(12);
         pdf.text('Keranjang Pasien', margin, yPos);
         pdf.setFont('helvetica', 'normal');
 
@@ -342,7 +358,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
           // Show "No data" message instead of table headers
           yPos += 4; // Reduced from 8 to 4 to be closer to the header
           pdf.text('Tidak ada data', margin, yPos);
-          yPos += 6; // Reduced from 10 to 6
+          // yPos += 3; // Reduced from 6 to 3 to decrease spacing below the message
         } else {
           const headers = ['Nama', 'Tanggal', 'Harga', 'Kuantitas', 'Total'];
           // Distribute cart columns width evenly for 5 columns
@@ -357,16 +373,16 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
           const cartStartX = margin;
           const maxNameWidth = colWidths[0] - 5; // Leave some padding
 
-          // Draw header line with more compact spacing
-          drawLine(yPos - 1); // Reduced from -2
+          // Draw header line with more compact spacing - reduce spacing before headers
+          drawLine(yPos - 0.5); // Reduced from -1
 
           // Print headers with reduced spacing
-          yPos += 4; // Reduced from 6
+          yPos += 3; // Reduced from 4 to bring headers closer to the line
 
           // Use normal font with slightly larger size instead of bold for a semi-bold effect
           pdf.setFont('helvetica', 'normal');
-          // Set a slightly larger font size for headers
-          pdf.setFontSize(12.5); // Slightly larger than the default 12
+          // Set consistent font size 10 for headers
+          pdf.setFontSize(10);
 
           // Fixed positions for better alignment - evenly distributed
           let posX = cartStartX;
@@ -392,14 +408,13 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
             align: 'right',
           });
 
-          // Reset font size to normal
-          const defaultFontSize = 12; // Reset to default size
-          pdf.setFontSize(defaultFontSize);
+          // Keep font size at 10 for content
+          pdf.setFontSize(10);
 
           // Draw line after headers with more compact spacing
-          yPos += 2; // Adjusted for symmetry
+          yPos += 1.5; // Reduced from 2 to bring line closer to headers
           drawLine(yPos);
-          yPos += 2; // Adjusted for symmetry
+          yPos += 1.5; // Reduced from 2 to bring content closer to line
 
           // Print cart items with more compact spacing
           data.cartItems.forEach((item) => {
@@ -407,20 +422,20 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
             checkAndAddPage(10); // Reduced from 12
             let itemX = cartStartX;
 
+            // Explicitly set font size to 10 for all cart items
+            pdf.setFontSize(10);
+
             // Name - keep on single line by adjusting font size if needed
             const nameWidth = pdf.getTextWidth(item.name);
             if (nameWidth > maxNameWidth) {
               // Calculate and set a smaller font size to fit the text
               const scaleFactor = maxNameWidth / nameWidth;
-              const newFontSize = Math.max(
-                7,
-                Math.floor(defaultFontSize * scaleFactor)
-              ); // Don't go smaller than 7pt
+              const newFontSize = Math.max(7, Math.floor(10 * scaleFactor)); // Don't go smaller than 7pt
 
               // Set smaller size, render text, then restore
               pdf.setFontSize(newFontSize);
               pdf.text(item.name, itemX, yPos);
-              pdf.setFontSize(defaultFontSize); // Restore original font size
+              pdf.setFontSize(10); // Restore to exactly 10
             } else {
               pdf.text(item.name, itemX, yPos);
             }
@@ -490,6 +505,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
         }
 
         pdf.setFont('helvetica', 'bold');
+        pdf.setFontSize(12);
         pdf.text('Rincian Biaya', pageWidth - margin - 80, yPos);
         pdf.setFont('helvetica', 'normal');
 
@@ -507,7 +523,8 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
           if (isTotal) {
             yPos += lineHeight;
             pdf.setFont('helvetica', 'bold');
-            pdf.line(breakdownLeft, yPos - 3, pageWidth - margin, yPos - 3);
+            // Reduce spacing between text and line
+            pdf.line(breakdownLeft, yPos - 2, pageWidth - margin, yPos - 2); // Reduced from -3
           }
           yPos += lineHeight;
           pdf.text(label, breakdownLeft, yPos);
