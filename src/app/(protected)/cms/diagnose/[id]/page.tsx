@@ -98,7 +98,7 @@ export default function DiagnoseDetailPage({
 
       toast({
         title: 'Success',
-        description: 'Diagnose deleted successfully',
+        description: 'Diagnosa berhasil dihapus',
       });
 
       router.push('/cms/diagnose');
@@ -106,7 +106,7 @@ export default function DiagnoseDetailPage({
       console.error('Error deleting diagnose:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete diagnose',
+        description: 'Gagal menghapus diagnosa',
         variant: 'destructive',
       });
     }

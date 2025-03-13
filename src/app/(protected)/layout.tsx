@@ -32,10 +32,6 @@ export default function ProtectedLayout({
           setUser(data.user);
 
           if (isCMSRoute && !canAccessCMS(data.user.role)) {
-            console.log(
-              'Client-side redirect: User role not allowed:',
-              data.user.role
-            );
             router.push('/');
           } else if (isCMSRoute) {
             console.log('Client-side access granted for role:', data.user.role);
