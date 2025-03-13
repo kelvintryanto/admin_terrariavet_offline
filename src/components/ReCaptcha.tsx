@@ -41,13 +41,19 @@ const ReCaptcha = ({
   const widgetIdRef = useRef<number | null>(null);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
   const [isWidgetRendered, setIsWidgetRendered] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const scriptRef = useRef<HTMLScriptElement | null>(null);
 
-  // Load the reCAPTCHA script
+  // Load the reCAPTCHA script with error handling and retries
   useEffect(() => {
     // Skip if running in SSR
     if (typeof window === 'undefined') return;
+
+    let retryCount = 0;
+    const MAX_RETRIES = 2;
+    const RETRY_DELAY = 2000; // 2 seconds
 
     // Check if script is already loaded
     if (document.querySelector('script[src*="recaptcha/api.js"]')) {
@@ -55,31 +61,59 @@ const ReCaptcha = ({
       return;
     }
 
-    const script = document.createElement('script');
-    script.src = `https://www.google.com/recaptcha/api.js?render=explicit`;
-    script.async = true;
-    script.defer = true;
+    const loadScript = () => {
+      // Clear previous script if it exists
+      if (scriptRef.current && scriptRef.current.parentNode) {
+        scriptRef.current.parentNode.removeChild(scriptRef.current);
+      }
 
-    script.onload = () => {
-      setIsScriptLoaded(true);
+      const script = document.createElement('script');
+      script.src = `https://www.google.com/recaptcha/api.js?render=explicit&onload=onRecaptchaLoad`;
+      script.async = true;
+      script.defer = true;
+
+      script.onload = () => {
+        setIsScriptLoaded(true);
+        setLoadError(null);
+      };
+
+      script.onerror = () => {
+        if (retryCount < MAX_RETRIES) {
+          retryCount++;
+          // Retry with exponential backoff
+          setTimeout(loadScript, RETRY_DELAY * retryCount);
+        } else {
+          setLoadError('Failed to load reCAPTCHA after multiple attempts');
+          // Continue without reCAPTCHA - this will let the form work without it in case of network issues
+        }
+      };
+
+      document.head.appendChild(script);
+      scriptRef.current = script;
     };
 
-    document.head.appendChild(script);
+    loadScript();
 
     return () => {
-      // No need to remove the script, let it be cached
+      // No need to remove the script on unmount, let it be cached
     };
   }, []);
 
   // Render reCAPTCHA when script is loaded
   useEffect(() => {
     // Skip if running in SSR or script not loaded or widget already rendered
-    if (typeof window === 'undefined' || !isScriptLoaded || isWidgetRendered)
+    if (
+      typeof window === 'undefined' ||
+      !isScriptLoaded ||
+      isWidgetRendered ||
+      loadError
+    )
       return;
 
     const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
     if (!siteKey) {
       console.error('NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not defined');
+      setLoadError('reCAPTCHA site key is missing');
       return;
     }
 
@@ -105,6 +139,7 @@ const ReCaptcha = ({
         const errorMsg = error instanceof Error ? error.message : String(error);
         if (!errorMsg.includes('already been rendered')) {
           console.error('Error rendering reCAPTCHA:', error);
+          setLoadError('Error rendering reCAPTCHA widget');
         }
       }
     };
@@ -122,26 +157,34 @@ const ReCaptcha = ({
           window.grecaptcha &&
           typeof window.grecaptcha.render === 'function'
         ) {
-          if (intervalRef.current) clearInterval(intervalRef.current);
-          if (timeoutRef.current) clearTimeout(timeoutRef.current);
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+            timeoutRef.current = null;
+          }
           renderWidget();
         }
       }, 100);
 
-      // Clear interval after 10 seconds if it hasn't rendered, but don't log an error
+      // Clear interval after 5 seconds if it hasn't rendered
+      // Less aggressive timeout (5s instead of 10s) to prevent unhandled errors
       timeoutRef.current = setTimeout(() => {
         if (intervalRef.current) {
           clearInterval(intervalRef.current);
           intervalRef.current = null;
 
-          // Only log an issue if debug is needed
-          if (process.env.NODE_ENV === 'development') {
-            console.log(
-              'reCAPTCHA initialization timed out - this is normal if the component unmounted'
-            );
+          // Set error state so we can show a fallback UI
+          setLoadError('reCAPTCHA initialization timed out');
+
+          // Notify user via onExpired callback if provided
+          if (onExpired) {
+            onExpired();
           }
         }
-      }, 10000);
+      }, 5000);
     }
 
     // Clean up on unmount
@@ -155,7 +198,15 @@ const ReCaptcha = ({
         timeoutRef.current = null;
       }
     };
-  }, [isScriptLoaded, isWidgetRendered, onVerify, onExpired, theme, size]);
+  }, [
+    isScriptLoaded,
+    isWidgetRendered,
+    onVerify,
+    onExpired,
+    theme,
+    size,
+    loadError,
+  ]);
 
   // Add cleanup effect
   useEffect(() => {
@@ -170,11 +221,6 @@ const ReCaptcha = ({
           window.grecaptcha.reset(widgetIdRef.current);
         } catch {
           // Silently handle reset errors on unmount
-          if (process.env.NODE_ENV === 'development') {
-            console.log(
-              'Failed to reset reCAPTCHA on unmount - this is normal'
-            );
-          }
         }
       }
 
@@ -183,6 +229,32 @@ const ReCaptcha = ({
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, []);
+
+  // Show error state if loading failed
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center w-full p-3 rounded-md bg-red-500/10 border border-red-500/20">
+        <p className="text-sm text-red-200 text-center">
+          Gagal memuat reCAPTCHA. Silakan coba lagi nanti.
+        </p>
+        <button
+          className="mt-2 px-3 py-1 text-xs bg-white/10 hover:bg-white/20 rounded-md text-white transition-colors"
+          onClick={() => {
+            setLoadError(null);
+            setIsScriptLoaded(false);
+            setIsWidgetRendered(false);
+            // Force reload the component
+            if (scriptRef.current && scriptRef.current.parentNode) {
+              scriptRef.current.parentNode.removeChild(scriptRef.current);
+              scriptRef.current = null;
+            }
+          }}
+        >
+          Coba Lagi
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex justify-center w-full overflow-hidden">

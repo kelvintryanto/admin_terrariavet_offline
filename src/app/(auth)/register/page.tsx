@@ -172,13 +172,6 @@ const Register = () => {
     setInputChanged(true);
   };
 
-  const handleExpired = () => {
-    setRecaptchaToken('');
-    setRecaptchaError(
-      'Verifikasi reCAPTCHA telah kedaluwarsa. Silakan verifikasi kembali.'
-    );
-  };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilledInputs((prev) => ({
       ...prev,
@@ -402,7 +395,12 @@ const Register = () => {
                     <div className="flex justify-center items-center w-full overflow-hidden px-2">
                       <ReCaptcha
                         onVerify={handleVerify}
-                        onExpired={handleExpired}
+                        onExpired={() => {
+                          setRecaptchaToken('');
+                          setRecaptchaError(
+                            'Verifikasi reCAPTCHA telah kedaluwarsa. Silakan verifikasi kembali.'
+                          );
+                        }}
                         size={isMobile ? 'compact' : 'normal'}
                       />
                     </div>
