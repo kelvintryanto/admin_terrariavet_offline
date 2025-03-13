@@ -151,17 +151,22 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
             align: 'right',
           }
         );
-        // Add bank account information
-        pdf.text('BANK BCA : 4970343771', pageWidth - margin, yPos + 25, {
-          align: 'right',
-        });
+        // Add bank account information (account name is required)
+        pdf.text(
+          'BANK BCA : 4970343771 a.n Yudhiyanto Tasma',
+          pageWidth - margin - 1.3, // Adjust X position by moving 3mm to the left
+          yPos + 25,
+          {
+            align: 'right',
+          }
+        );
 
         // Add header line - make it relative to yPos instead of fixed at 40
         pdf.line(margin, yPos + 28, pageWidth - margin, yPos + 28);
 
         // Header - adjust starting position based on the new line position
         // Increased from 35 to 45 to add more space after the line
-        yPos += 45; // This now means yPos + 30 (line) + 15 (space)
+        yPos += 40; // This now means yPos + 30 (line) + 15 (space)
         pdf.setFont('helvetica', 'bold');
         pdf.setFontSize(14);
         pdf.text('INVOICE PERAWATAN', pageWidth / 2, yPos, { align: 'center' });
