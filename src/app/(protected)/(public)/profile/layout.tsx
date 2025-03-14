@@ -42,15 +42,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex relative">
           {/* Fixed Sidebar */}
           <div className="fixed top-16 left-0 w-20 md:w-64 z-10">
-            {/* Limiting height to avoid footer overlap */}
-            <div className="h-[calc(100vh-210px)] p-2 md:p-4 overflow-y-auto">
+            {/* Using auto height for all screens */}
+            <div className="h-auto p-2 md:p-4 overflow-y-auto">
               <ProfileCard className="h-full" />
             </div>
           </div>
 
           {/* Main Content */}
           <div className="flex-1 ml-20 md:ml-64">
-            <main className="p-4 md:p-6">{children}</main>
+            <main className="p-[10px] md:p-[15px]">{children}</main>
           </div>
         </div>
       </div>

@@ -1,14 +1,13 @@
-"use client";
+'use client';
 
-import { ClipboardPlus, HandHeart } from "lucide-react";
-import Link from "next/link";
-import { loginAction } from "./action";
-import { useActionState } from "react";
-import { motion } from "framer-motion";
-import Image from "next/image";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton";
+import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
+import { motion } from 'framer-motion';
+import { ClipboardPlus, HandHeart } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useActionState, useEffect, useState } from 'react';
+import { loginAction } from './action';
 
 const formVariants = {
   hidden: (isMobile: boolean) => ({
@@ -22,7 +21,7 @@ const formVariants = {
     opacity: 1,
     transition: {
       duration: 0.5,
-      ease: "easeOut",
+      ease: 'easeOut',
       staggerChildren: 0.1,
     },
   },
@@ -40,7 +39,7 @@ const imageVariants = {
     opacity: 1,
     transition: {
       duration: 0.5,
-      ease: "easeOut",
+      ease: 'easeOut',
     },
   },
 };
@@ -69,7 +68,7 @@ const labelVariants = {
     y: -10,
     scale: 0.85,
     opacity: 1,
-    color: "rgb(251 146 60)",
+    color: 'rgb(251 146 60)',
   },
 };
 
@@ -83,7 +82,7 @@ const Login = () => {
 
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [filledInputs, setFilledInputs] = useState<{ [key: string]: boolean }>({
-    email: false,
+    identifier: false,
     password: false,
   });
 
@@ -96,8 +95,8 @@ const Login = () => {
       setIsMobile(window.innerWidth <= 1024);
     };
 
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   useEffect(() => {
@@ -205,25 +204,25 @@ const Login = () => {
               <motion.div variants={inputVariants} className="space-y-2">
                 <div className="relative">
                   <motion.label
-                    htmlFor="email"
+                    htmlFor="identifier"
                     animate={
-                      focusedInput === "email" || filledInputs.email
-                        ? "focused"
-                        : "unfocused"
+                      focusedInput === 'identifier' || filledInputs.identifier
+                        ? 'focused'
+                        : 'unfocused'
                     }
                     variants={labelVariants}
                     className="absolute left-3 text-sm pointer-events-none transition-all duration-200"
                   >
-                    Email
+                    Email atau No. Handphone
                   </motion.label>
                   <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="Email"
+                    id="identifier"
+                    name="identifier"
+                    type="text"
+                    placeholder="Email atau No. Handphone"
                     className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white placeholder:text-white/50 focus:border-orange-400/50 focus:outline-none focus:ring-1 focus:ring-orange-400/50 transition-all duration-200 placeholder:opacity-100 focus:placeholder:opacity-0"
                     disabled={state.pending}
-                    onFocus={() => handleFocus("email")}
+                    onFocus={() => handleFocus('identifier')}
                     onBlur={() => handleBlur()}
                     onChange={handleChange}
                   />
@@ -235,9 +234,9 @@ const Login = () => {
                   <motion.label
                     htmlFor="password"
                     animate={
-                      focusedInput === "password" || filledInputs.password
-                        ? "focused"
-                        : "unfocused"
+                      focusedInput === 'password' || filledInputs.password
+                        ? 'focused'
+                        : 'unfocused'
                     }
                     variants={labelVariants}
                     className="absolute left-3 text-sm pointer-events-none transition-all duration-200"
@@ -248,10 +247,10 @@ const Login = () => {
                     id="password"
                     name="password"
                     type="password"
-                    placeholder={focusedInput === "password" ? "" : "Password"}
+                    placeholder={focusedInput === 'password' ? '' : 'Password'}
                     className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white placeholder:text-white/50 focus:border-orange-400/50 focus:outline-none focus:ring-1 focus:ring-orange-400/50 transition-all duration-200"
                     disabled={state.pending}
-                    onFocus={() => handleFocus("password")}
+                    onFocus={() => handleFocus('password')}
                     onBlur={() => handleBlur()}
                     onChange={handleChange}
                   />
@@ -265,7 +264,7 @@ const Login = () => {
                 disabled={state.pending}
                 className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-2 font-medium text-white hover:from-orange-600 hover:to-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 focus:ring-offset-violet-800 disabled:opacity-50"
               >
-                {state.pending ? "Masuk..." : "Masuk"}
+                {state.pending ? 'Masuk...' : 'Masuk'}
               </motion.button>
 
               <div className="relative my-6">
@@ -274,7 +273,7 @@ const Login = () => {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-violet-800/90 px-2 text-white/50">
-                    Or continue with
+                    Atau lanjutkan dengan
                   </span>
                 </div>
               </div>
@@ -289,7 +288,7 @@ const Login = () => {
               className="space-y-2 text-center text-sm"
             >
               <p className="text-white/70">
-                Belum punya akun?{" "}
+                Belum punya akun?{' '}
                 <Link
                   href="/register"
                   className="text-orange-400 hover:text-orange-300"
@@ -298,7 +297,7 @@ const Login = () => {
                 </Link>
               </p>
               <p className="text-white/70">
-                Lupa password?{" "}
+                Lupa password?{' '}
                 <Link
                   href="/forgot-password"
                   className="text-orange-400 hover:text-orange-300"

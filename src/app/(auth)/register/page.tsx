@@ -73,16 +73,47 @@ const labelVariants = {
 };
 
 const formFields = [
-  { id: 'name', name: 'name', type: 'text', label: 'Nama Lengkap' },
-  { id: 'email', name: 'email', type: 'email', label: 'Email' },
-  { id: 'phone', name: 'phone', type: 'text', label: 'No. Handphone' },
-  { id: 'address', name: 'address', type: 'text', label: 'Alamat' },
-  { id: 'password', name: 'password', type: 'password', label: 'Password' },
+  {
+    id: 'name',
+    name: 'name',
+    type: 'text',
+    label: 'Nama Lengkap',
+    required: true,
+  },
+  {
+    id: 'email',
+    name: 'email',
+    type: 'email',
+    label: 'Email (Opsional)',
+    required: false,
+  },
+  {
+    id: 'phone',
+    name: 'phone',
+    type: 'text',
+    label: 'No. Handphone',
+    required: true,
+  },
+  {
+    id: 'address',
+    name: 'address',
+    type: 'text',
+    label: 'Alamat',
+    required: true,
+  },
+  {
+    id: 'password',
+    name: 'password',
+    type: 'password',
+    label: 'Password',
+    required: true,
+  },
   {
     id: 'confirmPassword',
     name: 'confirmPassword',
     type: 'password',
     label: 'Ulangi Password',
+    required: true,
   },
 ];
 
@@ -372,6 +403,7 @@ const Register = () => {
                         placeholder={field.label}
                         className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white placeholder:text-white/50 focus:border-orange-400/50 focus:outline-none focus:ring-1 focus:ring-orange-400/50 transition-all duration-200 placeholder:opacity-100 focus:placeholder:opacity-0"
                         disabled={state.pending}
+                        required={field.required}
                         onFocus={() => handleFocus(field.id)}
                         onBlur={() => handleBlur()}
                         onChange={handleChange}

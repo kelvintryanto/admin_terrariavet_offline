@@ -10,6 +10,8 @@ interface CustomerData {
   name: string;
   email: string;
   profileImage?: string;
+  phone: string;
+  address: string;
 }
 
 const Owner = () => {
@@ -30,12 +32,16 @@ const Owner = () => {
           );
           const customerData = await customerResponse.json();
 
+          console.log(customerData.customer);
+
           if (customerData.customer) {
             setCustomerData({
               id: customerData.customer._id || customerData.customer.id,
               name: customerData.customer.name,
               email: customerData.customer.email,
               profileImage: customerData.customer.profileImage,
+              phone: customerData.customer.phone,
+              address: customerData.customer.address,
             });
           }
         }

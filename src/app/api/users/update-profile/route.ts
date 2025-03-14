@@ -15,7 +15,6 @@ export async function POST(request: NextRequest) {
       delete body.password;
       delete body._id;
       delete body.id;
-      delete body.email;
       delete body.role;
 
       // Add updatedAt timestamp

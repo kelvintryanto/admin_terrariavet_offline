@@ -2,6 +2,7 @@
 
 import { Breed } from '@/app/models/breed';
 import { Dog } from '@/app/models/dog';
+import { AddPetCard } from '@/components/profile/pet/AddPetCard';
 import { PetCard } from '@/components/profile/pet/PetCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
@@ -153,6 +154,7 @@ export default function PetsPage() {
               <PetCard dog={dog} breeds={breeds} />
             </Link>
           ))}
+          <AddPetCard />
         </div>
       )}
     </motion.div>

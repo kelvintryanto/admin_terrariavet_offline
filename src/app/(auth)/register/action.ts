@@ -1,13 +1,21 @@
 'use server';
 
 import redis from '@/app/config/redis';
-import { createCustomer, getCustomerByEmail } from '@/app/models/customer';
+import {
+  createCustomer,
+  getCustomerByEmail,
+  getCustomerByPhone,
+} from '@/app/models/customer';
 import { z } from 'zod';
 
 const registerSchema = z
   .object({
     name: z.string().min(1, 'Nama lengkap wajib diisi'),
-    email: z.string().email('Format email tidak valid'),
+    email: z
+      .string()
+      .email('Format email tidak valid')
+      .optional()
+      .or(z.literal('')),
     password: z.string().min(5, 'Password minimal 5 karakter'),
     confirmPassword: z.string(),
     phone: z.string().min(10, 'Nomor telepon minimal 10 digit'),
@@ -125,23 +133,37 @@ export async function registerAction(
       };
     }
 
-    const existingUser = await getCustomerByEmail(
-      parsedData.data.email as string
-    );
-    if (existingUser) {
-      // Instead of redirect, return error about existing user
+    // Check if email is provided and already exists
+    if (parsedData.data.email) {
+      const existingUserByEmail = await getCustomerByEmail(
+        parsedData.data.email as string
+      );
+      if (existingUserByEmail) {
+        return {
+          ...prevState,
+          pending: false,
+          error:
+            'Email sudah terdaftar. Silakan gunakan email lain atau login dengan email tersebut.',
+          success: false,
+        };
+      }
+    }
+
+    // Check if phone number already exists
+    const existingUserByPhone = await getCustomerByPhone(parsedData.data.phone);
+    if (existingUserByPhone) {
       return {
         ...prevState,
         pending: false,
         error:
-          'Email sudah terdaftar. Silakan gunakan email lain atau login dengan email tersebut.',
+          'Nomor telepon sudah terdaftar. Silakan gunakan nomor lain atau login dengan nomor tersebut.',
         success: false,
       };
     }
 
     const customerInput = {
       name: parsedData.data.name,
-      email: parsedData.data.email,
+      email: parsedData.data.email || undefined, // Set to undefined if empty string
       password: parsedData.data.password,
       phone: parsedData.data.phone,
       address: parsedData.data.address,

@@ -1,8 +1,68 @@
 export function formatDogAge(birthYear: string, birthMonth: string): string {
   if (!birthYear || !birthMonth) return 'Unknown';
 
+  // Convert month name to month number if needed
+  let monthNumber: number;
+
+  // Handle month names in English or Indonesian
+  if (isNaN(parseInt(birthMonth))) {
+    const englishMonths = [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ];
+
+    const indonesianMonths = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+
+    // Check English month names
+    const englishIndex = englishMonths.findIndex(
+      (m) => m.toLowerCase() === birthMonth.toLowerCase()
+    );
+
+    // Check Indonesian month names if not found in English
+    const indonesianIndex =
+      englishIndex === -1
+        ? indonesianMonths.findIndex(
+            (m) => m.toLowerCase() === birthMonth.toLowerCase()
+          )
+        : -1;
+
+    // Use the found index + 1 (to make it 1-based) or default to 1 if not found
+    monthNumber =
+      englishIndex !== -1
+        ? englishIndex + 1
+        : indonesianIndex !== -1
+        ? indonesianIndex + 1
+        : 1;
+  } else {
+    // It's already a numeric string
+    monthNumber = parseInt(birthMonth);
+  }
+
   const today = new Date();
-  const birthDate = new Date(parseInt(birthYear), parseInt(birthMonth) - 1);
+  const birthDate = new Date(parseInt(birthYear), monthNumber - 1);
 
   let years = today.getFullYear() - birthDate.getFullYear();
   const monthDiff = today.getMonth() - birthDate.getMonth();

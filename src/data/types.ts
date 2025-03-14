@@ -39,7 +39,7 @@ export interface InvoiceData {
   _id?: string;
   invoiceNo: string;
   clientName: string;
-  contact: string;
+  contact: string | undefined;
   subAccount: string;
   inpatientDate: string;
   inpatientTime: string;

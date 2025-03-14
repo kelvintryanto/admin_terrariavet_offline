@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify } from 'jose';
 
 type JWTPayload = {
   id: string;
-  email: string;
+  email: string | '';
   name: string;
   role: string;
   profileImage?: string;

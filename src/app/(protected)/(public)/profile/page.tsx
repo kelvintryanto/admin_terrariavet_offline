@@ -8,6 +8,7 @@ import { PetCard } from '@/components/profile/pet/PetCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -139,7 +140,12 @@ export default function ProfilePage() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-2 sm:gap-4">
                 {dogs.map((dog) => (
-                  <PetCard key={dog._id.toString()} dog={dog} breeds={breeds} />
+                  <Link
+                    key={dog._id.toString()}
+                    href={`/profile/pets/${dog._id.toString()}`}
+                  >
+                    <PetCard dog={dog} breeds={breeds} />
+                  </Link>
                 ))}
                 <AddPetCard />
               </div>

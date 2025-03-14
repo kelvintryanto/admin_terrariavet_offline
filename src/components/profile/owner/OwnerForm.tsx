@@ -28,6 +28,8 @@ interface OwnerFormProps {
     id: string;
     name: string;
     email: string;
+    phone?: string;
+    address?: string;
     profileImage?: string;
   } | null;
 }
@@ -39,10 +41,10 @@ const OwnerForm = ({ initialData }: OwnerFormProps) => {
   const [userData, setUserData] = useState<UserData>({
     name: initialData?.name || '',
     email: initialData?.email || '',
-    phone: '',
+    phone: initialData?.phone || '',
     gender: '',
     birthDate: '',
-    address: '',
+    address: initialData?.address || '',
     profileImage: initialData?.profileImage,
   });
   const [isLoading, setIsLoading] = useState(!initialData);
@@ -57,23 +59,36 @@ const OwnerForm = ({ initialData }: OwnerFormProps) => {
 
       setIsLoading(true);
       try {
-        const response = await fetch('/api/users/me');
-        const data = await response.json();
+        // First get the user ID from /api/users/me
+        const meResponse = await fetch('/api/users/me');
+        const meData = await meResponse.json();
 
-        if (data.user) {
+        if (!meData.user || !meData.user.id) {
+          throw new Error('User ID not found');
+        }
+
+        // Then fetch the complete user data by ID
+        const userResponse = await fetch(`/api/customers/${meData.user.id}`);
+        if (!userResponse.ok) {
+          throw new Error('Failed to fetch user details');
+        }
+
+        const userData = await userResponse.json();
+
+        if (userData.customer) {
           setUserData({
-            _id: data.user._id,
-            id: data.user.id,
-            name: data.user.name || '',
-            email: data.user.email || '',
-            phone: data.user.phone || '',
-            gender: data.user.gender || '',
-            birthDate: data.user.birthDate
-              ? data.user.birthDate.split('T')[0]
+            _id: userData.customer._id,
+            id: userData.customer.id,
+            name: userData.customer.name || '',
+            email: userData.customer.email || '',
+            phone: userData.customer.phone || '',
+            gender: userData.customer.gender || '',
+            birthDate: userData.customer.birthDate
+              ? userData.customer.birthDate.split('T')[0]
               : '',
-            address: data.user.address || '',
-            role: data.user.role,
-            profileImage: data.user.profileImage || '',
+            address: userData.customer.address || '',
+            role: userData.customer.role,
+            profileImage: userData.customer.profileImage || '',
           });
         }
       } catch (error) {
@@ -117,6 +132,7 @@ const OwnerForm = ({ initialData }: OwnerFormProps) => {
         },
         body: JSON.stringify({
           name: userData.name,
+          email: userData.email,
           phone: userData.phone,
           gender: userData.gender,
           birthDate: userData.birthDate,
@@ -217,6 +233,21 @@ const OwnerForm = ({ initialData }: OwnerFormProps) => {
     }
   };
 
+  const getProxyImageUrl = (imageUrl?: string) => {
+    if (!imageUrl) return null;
+
+    // Check if the image is from Google
+    const isGoogleImage = imageUrl.includes('googleusercontent.com');
+
+    if (isGoogleImage) {
+      // Use our proxy for Google images
+      return `/api/image-proxy?url=${encodeURIComponent(imageUrl)}`;
+    }
+
+    // Return the original URL for other image sources
+    return imageUrl;
+  };
+
   if (isLoading) {
     return (
       <div className="bg-gradient-to-br from-violet-900/40 via-purple-900/30 to-violet-800/20 backdrop-blur-md rounded-xl p-6 border border-violet-500/10 shadow-lg w-full sm:w-2/3 md:w-1/2 lg:1/3 lg:py-8 px-14">
@@ -259,9 +290,31 @@ const OwnerForm = ({ initialData }: OwnerFormProps) => {
           />
           <Avatar className="w-32 h-32 border-4 border-orange-400/50">
             <AvatarImage
-              src={userData.profileImage || '/placeholder-avatar.jpg'}
+              src={
+                getProxyImageUrl(userData.profileImage) ||
+                '/placeholder-avatar.jpg'
+              }
               alt="Profile"
               className="object-cover"
+              onError={(e) => {
+                console.error(
+                  'Failed to load profile image:',
+                  userData.profileImage
+                );
+
+                // Check if this is a Google profile image
+                const imgSrc = userData.profileImage || '';
+                const isGoogleImage = imgSrc.includes('googleusercontent.com');
+
+                if (isGoogleImage) {
+                  console.log(
+                    'Detected Google profile image with CORS restrictions'
+                  );
+                }
+
+                // Hide the broken image
+                e.currentTarget.style.display = 'none';
+              }}
             />
             <AvatarFallback className="bg-gradient-to-br from-orange-400 to-orange-600 text-2xl text-white">
               {userData.name ? userData.name.slice(0, 2).toUpperCase() : 'UT'}
@@ -344,14 +397,11 @@ const OwnerForm = ({ initialData }: OwnerFormProps) => {
             <Input
               type="email"
               name="email"
-              value={userData.email}
-              disabled
+              value={userData.email || ''}
+              onChange={handleChange}
               placeholder="Masukkan email"
-              className="w-full mt-1 opacity-70"
+              className="w-full mt-1 border border-white rounded-lg text-white focus:ring-2 focus:ring-orange-400/50"
             />
-            <p className="text-xs text-orange-300 mt-1">
-              Email tidak dapat diubah
-            </p>
           </div>
 
           <div>
@@ -391,12 +441,18 @@ const OwnerForm = ({ initialData }: OwnerFormProps) => {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               type="submit"
-              disabled={isSaving}
+              disabled={isSaving || isUploadingImage}
               className="flex-1 rounded-lg bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-2 font-medium text-white hover:from-orange-600 hover:to-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 focus:ring-offset-violet-800 disabled:opacity-70"
             >
               {isSaving ? 'Menyimpan...' : 'Simpan Profil'}
             </motion.button>
           </div>
+
+          {isUploadingImage && (
+            <p className="text-orange-300 text-xs text-center mt-2">
+              Menunggu unggahan gambar selesai...
+            </p>
+          )}
         </motion.form>
       </div>
     </div>

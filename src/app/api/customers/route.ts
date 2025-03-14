@@ -1,6 +1,10 @@
 import { withCreateCustomerAccess } from '@/app/api/middleware';
 import redis from '@/app/config/redis';
-import { createCustomer, getAllCustomers } from '@/app/models/customer';
+import {
+  createCustomer,
+  getAllCustomers,
+  getCustomerByPhone,
+} from '@/app/models/customer';
 import { NextRequest, NextResponse } from 'next/server';
 
 // GET: List all customers (requires authentication)
@@ -39,6 +43,30 @@ export async function POST(request: NextRequest) {
   return withCreateCustomerAccess(request, async () => {
     try {
       const data = await request.json();
+
+      // Validate required fields
+      if (!data.name) {
+        return NextResponse.json(
+          { error: 'Nama pelanggan wajib diisi' },
+          { status: 400 }
+        );
+      }
+
+      if (!data.phone) {
+        return NextResponse.json(
+          { error: 'Nomor telepon wajib diisi' },
+          { status: 400 }
+        );
+      }
+
+      // Check if phone number already exists
+      const existingCustomer = await getCustomerByPhone(data.phone);
+      if (existingCustomer) {
+        return NextResponse.json(
+          { error: 'Nomor telepon sudah terdaftar' },
+          { status: 400 }
+        );
+      }
 
       await redis.del('customers');
 
