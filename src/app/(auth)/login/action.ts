@@ -38,10 +38,55 @@ interface AuthUser {
   googleUser?: boolean;
 }
 
+// Function to verify reCAPTCHA token
+async function verifyRecaptcha(token: string): Promise<boolean> {
+  try {
+    const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+
+    if (!secretKey) {
+      console.error('reCAPTCHA secret key is not defined');
+      return false;
+    }
+
+    const response = await fetch(
+      'https://www.google.com/recaptcha/api/siteverify',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          secret: secretKey,
+          response: token,
+        }),
+      }
+    );
+
+    const data = await response.json();
+    return data.success;
+  } catch (error) {
+    console.error('Error verifying reCAPTCHA:', error);
+    return false;
+  }
+}
+
 export async function loginAction(
   prevState: LoginState,
   formData: FormData
 ): Promise<LoginState> {
+  // Verify reCAPTCHA token if provided
+  const recaptchaToken = formData.get('recaptchaToken') as string;
+  if (recaptchaToken) {
+    const isValidToken = await verifyRecaptcha(recaptchaToken);
+    if (!isValidToken) {
+      return {
+        error: 'Verifikasi reCAPTCHA gagal. Silakan coba lagi.',
+        success: false,
+        pending: false,
+      };
+    }
+  }
+
   const data = {
     identifier: formData.get('identifier'),
     password: formData.get('password'),
