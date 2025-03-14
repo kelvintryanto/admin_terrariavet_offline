@@ -1,12 +1,13 @@
 'use client';
 
 import { GoogleLoginButton } from '@/components/auth/GoogleLoginButton';
+import ReCaptcha from '@/components/ReCaptcha';
 import { motion } from 'framer-motion';
 import { ClipboardPlus, HandHeart } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useActionState, useEffect, useState } from 'react';
+import { useActionState, useEffect, useState, useTransition } from 'react';
 import { loginAction } from './action';
 
 const formVariants = {
@@ -80,6 +81,12 @@ const Login = () => {
     pending: false,
   });
 
+  const [recaptchaToken, setRecaptchaToken] = useState<string>('');
+  const [recaptchaError, setRecaptchaError] = useState<string | null>(null);
+  const [showRecaptcha, setShowRecaptcha] = useState<boolean>(false);
+  const [formData, setFormData] = useState<FormData | null>(null);
+  const [isPending, startTransition] = useTransition();
+
   const [focusedInput, setFocusedInput] = useState<string | null>(null);
   const [filledInputs, setFilledInputs] = useState<{ [key: string]: boolean }>({
     identifier: false,
@@ -109,11 +116,45 @@ const Login = () => {
   const handleFocus = (id: string) => setFocusedInput(id);
   const handleBlur = () => setFocusedInput(null);
 
+  const handleVerify = (token: string) => {
+    setRecaptchaToken(token);
+    setRecaptchaError(null);
+
+    if (formData && token) {
+      const newFormData = new FormData();
+
+      for (const [key, value] of formData.entries()) {
+        newFormData.append(key, value);
+      }
+
+      newFormData.append('recaptchaToken', token);
+
+      startTransition(() => {
+        dispatch(newFormData);
+      });
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFilledInputs((prev) => ({
       ...prev,
       [e.target.id]: e.target.value.length > 0,
     }));
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const data = new FormData(e.currentTarget);
+
+    setFormData(data);
+
+    setShowRecaptcha(true);
+
+    if (recaptchaToken) {
+      data.append('recaptchaToken', recaptchaToken);
+      dispatch(data);
+    }
   };
 
   return (
@@ -200,7 +241,17 @@ const Login = () => {
               </motion.div>
             )}
 
-            <form action={dispatch} className="space-y-4">
+            {recaptchaError && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-lg bg-red-500/10 p-3 text-sm text-red-200 border border-red-500/20"
+              >
+                {recaptchaError}
+              </motion.div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
               <motion.div variants={inputVariants} className="space-y-2">
                 <div className="relative">
                   <motion.label
@@ -257,29 +308,84 @@ const Login = () => {
                 </div>
               </motion.div>
 
-              <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
-                type="submit"
-                disabled={state.pending}
-                className="w-full rounded-lg bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-2 font-medium text-white hover:from-orange-600 hover:to-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 focus:ring-offset-violet-800 disabled:opacity-50"
-              >
-                {state.pending ? 'Masuk...' : 'Masuk'}
-              </motion.button>
+              {showRecaptcha && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-4"
+                >
+                  <div className="bg-white/10 rounded-lg p-4 border border-white/20">
+                    <h3 className="text-center text-white text-sm mb-3">
+                      Mohon verifikasi bahwa Anda bukan robot
+                    </h3>
+                    <div className="flex justify-center items-center w-full overflow-hidden px-2">
+                      <ReCaptcha
+                        onVerify={handleVerify}
+                        onExpired={() => {
+                          setRecaptchaToken('');
+                          setRecaptchaError(
+                            'Verifikasi reCAPTCHA telah kedaluwarsa. Silakan verifikasi kembali.'
+                          );
+                        }}
+                        size={isMobile ? 'compact' : 'normal'}
+                      />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
 
-              <div className="relative my-6">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-white/10"></div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-400"
+                  />
+                  <label
+                    htmlFor="remember-me"
+                    className="ml-2 block text-sm text-white"
+                  >
+                    Ingat saya
+                  </label>
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-violet-800/90 px-2 text-white/50">
-                    Atau lanjutkan dengan
-                  </span>
-                </div>
+                <a
+                  href="#"
+                  className="text-sm text-orange-300 hover:text-orange-400"
+                >
+                  Lupa password?
+                </a>
               </div>
 
-              <GoogleLoginButton />
+              <div>
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  type="submit"
+                  disabled={state.pending || isPending}
+                  className="flex w-full justify-center rounded-lg bg-gradient-to-r from-orange-500 to-orange-400 hover:from-orange-600 hover:to-orange-500 px-4 py-2 font-medium text-white shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-400/50 focus:ring-offset-2 focus:ring-offset-violet-800 disabled:opacity-70"
+                >
+                  {state.pending || isPending ? (
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    'Masuk'
+                  )}
+                </motion.button>
+              </div>
             </form>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-white/10"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-violet-800/90 px-2 text-white/50">
+                  Atau lanjutkan dengan
+                </span>
+              </div>
+            </div>
+
+            <GoogleLoginButton />
 
             <motion.div
               initial={{ opacity: 0 }}

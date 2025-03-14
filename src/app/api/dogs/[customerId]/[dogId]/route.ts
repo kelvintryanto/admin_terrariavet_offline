@@ -7,11 +7,11 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { customerId: string; dogId: string } }
+  { params }: { params: Promise<{ customerId: string; dogId: string }> }
 ) {
   return withAuth(request, async (req, user) => {
     try {
-      const { customerId, dogId } = params;
+      const { customerId, dogId } = await params;
       const body = await request.json();
 
       // If not an admin, verify the user owns the dog
