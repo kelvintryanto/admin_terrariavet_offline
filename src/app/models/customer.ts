@@ -10,7 +10,7 @@ const COLLECTION = 'customers';
 export interface Customer {
   _id: ObjectId;
   name: string;
-  email: string;
+  email?: string;
   phone: string;
   address: string;
   password?: string;
@@ -27,7 +27,7 @@ export type CustomerDocument = WithId<Customer>;
 
 export interface CreateCustomer {
   name: string;
-  email: string;
+  email?: string;
   phone: string;
   address: string;
   password: string;
@@ -82,15 +82,28 @@ export const createCustomer = async (customer: CreateCustomer) => {
 };
 
 export const getCustomerByEmail = async (email: string) => {
+  if (!email) return null;
   const db = await getDb();
   return db.collection<CustomerDocument>(COLLECTION).findOne({ email });
 };
 
 export const verifyCustomerPassword = async (
-  email: string,
+  identifier: string,
   password: string
 ) => {
-  const customer = await getCustomerByEmail(email);
+  if (!identifier) return false;
+
+  // Check if identifier is email or phone
+  const isEmail = identifier.includes('@');
+
+  // Get customer by email or phone
+  let customer;
+  if (isEmail) {
+    customer = await getCustomerByEmail(identifier);
+  } else {
+    customer = await getCustomerByPhone(identifier);
+  }
+
   if (!customer || !customer.password) return false;
   return comparePass(password, customer.password);
 };
@@ -385,4 +398,9 @@ export const resetCustomerPassword = async (
     console.error('Error in resetCustomerPassword:', error);
     throw error;
   }
+};
+
+export const getCustomerByPhone = async (phone: string) => {
+  const db = await getDb();
+  return db.collection<CustomerDocument>(COLLECTION).findOne({ phone });
 };

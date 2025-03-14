@@ -190,14 +190,8 @@ export default function AddCustomerPage() {
           </div>
 
           <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              required
-              placeholder="Email"
-            />
+            <Label htmlFor="email">Email (Opsional)</Label>
+            <Input id="email" name="email" type="email" placeholder="Email" />
           </div>
 
           <div>

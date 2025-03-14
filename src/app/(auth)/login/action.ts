@@ -2,6 +2,7 @@
 
 import {
   getCustomerByEmail,
+  getCustomerByPhone,
   verifyCustomerPassword,
 } from '@/app/models/customer';
 import { getUserByEmail } from '@/app/models/user';
@@ -13,7 +14,7 @@ import { cookies } from 'next/headers';
 import { z } from 'zod';
 
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
+  identifier: z.string().min(1, 'Email or phone number is required'),
   password: z.string().min(5, 'Password must be at least 5 characters'),
 });
 
@@ -23,14 +24,14 @@ interface LoginState {
   pending: boolean;
   user?: {
     name: string;
-    email: string;
+    email?: string;
   } | null;
   redirect?: string;
 }
 
 interface AuthUser {
   _id: ObjectId;
-  email: string;
+  email?: string;
   name: string;
   role: string;
   profileImage?: string;
@@ -42,7 +43,7 @@ export async function loginAction(
   formData: FormData
 ): Promise<LoginState> {
   const data = {
-    email: formData.get('email'),
+    identifier: formData.get('identifier'),
     password: formData.get('password'),
   };
 
@@ -50,21 +51,32 @@ export async function loginAction(
 
   if (!parsedData.success) {
     return {
-      error: 'Invalid email or password',
+      error: 'Email atau nomor telepon atau password salah',
       success: false,
       pending: false,
     };
   }
 
-  // First try to find user in users collection (admin/super_admin)
-  const adminUser = await getUserByEmail(parsedData.data.email);
+  const identifier = parsedData.data.identifier;
+  const isEmail = identifier.includes('@');
 
-  // Then try to find in customers collection
-  const customer = await getCustomerByEmail(parsedData.data.email);
+  // First try to find user in users collection (admin/super_admin) if the identifier looks like an email
+  let adminUser = null;
+  if (isEmail) {
+    adminUser = await getUserByEmail(identifier);
+  }
+
+  // Then try to find in customers collection by email or phone
+  let customer = null;
+  if (isEmail) {
+    customer = await getCustomerByEmail(identifier);
+  } else {
+    customer = await getCustomerByPhone(identifier);
+  }
 
   if (!adminUser && !customer) {
     return {
-      error: 'Invalid email or password',
+      error: 'Email atau nomor telepon atau password salah',
       success: false,
       pending: false,
     };
@@ -87,7 +99,7 @@ export async function loginAction(
   } else if (customer) {
     // Customer authentication
     isValid = await verifyCustomerPassword(
-      parsedData.data.email,
+      customer.email || customer.phone,
       parsedData.data.password
     );
     if (isValid) {
@@ -102,7 +114,7 @@ export async function loginAction(
 
   if (!isValid || !userData) {
     return {
-      error: 'Invalid email or password',
+      error: 'Email atau nomor telepon atau password salah',
       success: false,
       pending: false,
     };
@@ -111,7 +123,7 @@ export async function loginAction(
   // Create JWT token
   const token = await sign({
     id: userData._id.toString(),
-    email: userData.email,
+    email: userData.email || '', // Use empty string as fallback if email is undefined
     name: userData.name,
     role: userData.role,
     profileImage: userData.profileImage,

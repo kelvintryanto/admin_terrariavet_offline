@@ -44,17 +44,29 @@ export default function OwnerProfilePage() {
   useEffect(() => {
     async function fetchUser() {
       try {
-        const response = await fetch('/api/users/me');
-        const data = await response.json();
-        if (!response.ok) {
+        // First get the user ID from /api/users/me
+        const meResponse = await fetch('/api/users/me');
+        const meData = await meResponse.json();
+
+        if (!meResponse.ok || !meData.user || !meData.user.id) {
           throw new Error('Gagal memuat data pengguna');
         }
-        setUser(data.user);
+
+        // Then fetch the complete user data by ID
+        const userResponse = await fetch(`/api/customers/${meData.user.id}`);
+
+        if (!userResponse.ok) {
+          throw new Error('Gagal memuat data pengguna');
+        }
+
+        const userData = await userResponse.json();
+
+        setUser(meData.user); // Keep original user data for ID and googleUser status
         setUserData({
-          name: data.user.name,
-          email: data.user.email,
-          phone: data.user.phone,
-          address: data.user.address,
+          name: userData.customer.name,
+          email: userData.customer.email,
+          phone: userData.customer.phone,
+          address: userData.customer.address,
         });
       } catch (error) {
         console.error('Failed to fetch user:', error);
@@ -159,20 +171,18 @@ export default function OwnerProfilePage() {
               Profil Pemilik
             </h2>
             <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto shrink-0">
+              <Link
+                href="/owner"
+                className="gap-2 w-full text-xs h-8 sm:h-9 whitespace-nowrap inline-flex items-center justify-center rounded-md border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground px-4 py-2"
+              >
+                <Edit size={14} className="sm:w-4 sm:h-4" />
+                Edit Profile
+              </Link>
               {!user?.googleUser && (
                 <div className="w-full sm:w-auto">
                   <ChangePasswordDialog />
                 </div>
               )}
-              <Link href="/owner" className="w-full sm:w-auto">
-                <Button
-                  variant="outline"
-                  className="gap-2 w-full text-xs h-8 sm:h-9 whitespace-nowrap"
-                >
-                  <Edit size={14} className="sm:w-4 sm:h-4" />
-                  Edit Profil
-                </Button>
-              </Link>
             </div>
           </div>
 
@@ -184,7 +194,7 @@ export default function OwnerProfilePage() {
                     Nama Lengkap
                   </h3>
                   <p className="text-white text-sm sm:text-base truncate">
-                    {userData?.name}
+                    {userData?.name || '-'}
                   </p>
                 </div>
                 <div>
@@ -192,7 +202,7 @@ export default function OwnerProfilePage() {
                     Email
                   </h3>
                   <p className="text-white text-sm sm:text-base truncate">
-                    {userData?.email}
+                    {userData?.email || '-'}
                   </p>
                 </div>
                 <div>
@@ -200,7 +210,7 @@ export default function OwnerProfilePage() {
                     Telepon
                   </h3>
                   <p className="text-white text-sm sm:text-base truncate">
-                    {userData?.phone || 'Belum diisi'}
+                    {userData?.phone || '-'}
                   </p>
                 </div>
                 <div>
@@ -208,7 +218,7 @@ export default function OwnerProfilePage() {
                     Alamat
                   </h3>
                   <p className="text-white text-sm sm:text-base break-words">
-                    {userData?.address || 'Belum diisi'}
+                    {userData?.address || '-'}
                   </p>
                 </div>
               </div>

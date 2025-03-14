@@ -4,7 +4,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
-import { Edit, Mail, User } from 'lucide-react';
+import { Edit, Mail, Phone, User } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -12,7 +12,8 @@ import { useEffect, useState } from 'react';
 interface User {
   id: string;
   name: string;
-  email: string;
+  email?: string;
+  phone?: string;
   profileImage?: string | null;
 }
 
@@ -37,6 +38,7 @@ export function ProfileHeader() {
               id: userData.customer._id || userData.customer.id,
               name: userData.customer.name,
               email: userData.customer.email,
+              phone: userData.customer.phone,
               profileImage: userData.customer.profileImage,
             });
           }
@@ -67,6 +69,21 @@ export function ProfileHeader() {
     console.warn('Invalid profile image URL format:', user.profileImage);
   }
 
+  // Check if the profile image is from Google and convert it to use our proxy
+  const getImageSrc = (originalSrc: string | undefined | null): string => {
+    if (!originalSrc) return '';
+
+    const isGoogleImage = originalSrc.includes('googleusercontent.com');
+
+    // Use our proxy for Google images
+    if (isGoogleImage) {
+      return `/api/image-proxy?url=${encodeURIComponent(originalSrc)}`;
+    }
+
+    // Use the original URL for other images
+    return originalSrc;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -79,7 +96,7 @@ export function ProfileHeader() {
             {hasValidProfileImage ? (
               <div className="relative w-full h-full rounded-full overflow-hidden">
                 <Image
-                  src={user?.profileImage || ''}
+                  src={getImageSrc(user?.profileImage)}
                   alt={user?.name || 'Profile'}
                   fill
                   unoptimized={true}
@@ -90,6 +107,19 @@ export function ProfileHeader() {
                       'Failed to load profile image:',
                       user?.profileImage
                     );
+
+                    // Check if this is a Google profile image
+                    const imgSrc = user?.profileImage || '';
+                    const isGoogleImage = imgSrc.includes(
+                      'googleusercontent.com'
+                    );
+
+                    if (isGoogleImage) {
+                      console.log(
+                        'Detected Google profile image with CORS restrictions'
+                      );
+                    }
+
                     // Use fallback avatar
                     const fallbackDiv = document.createElement('div');
                     fallbackDiv.className =
@@ -122,7 +152,7 @@ export function ProfileHeader() {
           {hasValidProfileImage && (
             <div className="hidden">
               <Image
-                src={user?.profileImage || ''}
+                src={getImageSrc(user?.profileImage)}
                 alt="Debug profile"
                 width={50}
                 height={50}
@@ -157,7 +187,11 @@ export function ProfileHeader() {
           <div className="flex flex-col md:flex-row gap-4 text-sm text-white/70">
             <div className="flex items-center gap-2">
               <Mail size={16} className="text-orange-300" />
-              {user?.email}
+              {user?.email || '-'}
+            </div>
+            <div className="flex items-center gap-2">
+              <Phone size={16} className="text-orange-300" />
+              {user?.phone || '-'}
             </div>
           </div>
         </div>

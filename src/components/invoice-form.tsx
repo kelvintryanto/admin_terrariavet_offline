@@ -196,7 +196,7 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
       setFormData((prev) => ({
         ...prev,
         clientName: customer.name,
-        contact: customer.phone || customer.email,
+        contact: customer.phone || customer.email || '',
       }));
 
       // If we have prefetched data for this customer, use it
@@ -564,7 +564,7 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
       const invoiceData: InvoiceData = {
         invoiceNo: formData.invoiceNo,
         clientName: formData.clientName,
-        contact: formData.contact,
+        contact: formData.contact || '',
         subAccount: formData.subAccount,
         inpatientDate: formData.inpatientDate,
         inpatientTime: formData.inpatientTime,
@@ -772,7 +772,7 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
                   <Label htmlFor="kontak">Kontak</Label>
                   <Input
                     id="kontak"
-                    value={formData.contact}
+                    value={formData.contact || ''}
                     onChange={(e) =>
                       setFormData({ ...formData, contact: e.target.value })
                     }
@@ -1559,7 +1559,7 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
                 loading ||
                 formData.total === 0 ||
                 !formData.clientName.trim() ||
-                !formData.contact.trim()
+                !formData.contact?.trim()
               }
             >
               {loading ? 'Membuat Invoice...' : 'Buat Invoice'}

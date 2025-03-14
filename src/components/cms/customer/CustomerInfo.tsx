@@ -21,19 +21,11 @@ export function CustomerInfo({ customer }: CustomerInfoProps) {
             <div className="flex flex-col gap-1 sm:gap-2 text-muted-foreground text-xs sm:text-sm md:text-base">
               <div className="flex items-center gap-1 sm:gap-2">
                 <Mail className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-                <span className="break-all">{customer.email}</span>
+                <span className="break-all">{customer.email || '-'}</span>
               </div>
               <div className="flex items-center gap-1 sm:gap-2">
                 <Phone className="h-3 w-3 sm:h-4 sm:w-4 shrink-0" />
-                <span>
-                  {customer.phone ? (
-                    customer.phone
-                  ) : (
-                    <span className="italic text-muted-foreground/70">
-                      Nomor telepon belum tersedia
-                    </span>
-                  )}
-                </span>
+                <span>{customer.phone || '-'}</span>
               </div>
             </div>
           </div>
