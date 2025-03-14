@@ -349,12 +349,12 @@ const Login = () => {
                     Ingat saya
                   </label>
                 </div>
-                <a
-                  href="#"
+                <Link
+                  href="/forgot-password"
                   className="text-sm text-orange-300 hover:text-orange-400"
                 >
                   Lupa password?
-                </a>
+                </Link>
               </div>
 
               <div>
