@@ -2,10 +2,10 @@
 
 import ReCaptcha from '@/components/ReCaptcha';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, LockKeyhole } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState, useTransition } from 'react';
-import { forgotPasswordAction } from './action';
+import { resetPasswordAction } from './action';
 
 const formVariants = {
   hidden: {
@@ -22,11 +22,21 @@ const formVariants = {
   },
 };
 
-const ForgotPasswordPage = () => {
-  const [email, setEmail] = useState('');
+export default function ResetPasswordPage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  const { token } = params as unknown as { token: string };
+  const decodedToken = decodeURIComponent(token);
+
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [tokenValid, setTokenValid] = useState<boolean | null>(null);
+  const [tokenChecking, setTokenChecking] = useState(true);
   const [recaptchaToken, setRecaptchaToken] = useState<string>('');
   const [recaptchaError, setRecaptchaError] = useState<string | null>(null);
   const [showRecaptcha, setShowRecaptcha] = useState<boolean>(false);
@@ -45,19 +55,49 @@ const ForgotPasswordPage = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const handleVerify = async (token: string) => {
-    setRecaptchaToken(token);
+  // Verify token validity when component mounts
+  useEffect(() => {
+    async function verifyToken() {
+      try {
+        const response = await fetch('/api/verify-reset-token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token: decodedToken }),
+        });
+
+        const data = await response.json();
+        setTokenValid(data.valid);
+        setTokenChecking(false);
+      } catch (e) {
+        console.error('Error verifying token:', e);
+        setTokenValid(false);
+        setTokenChecking(false);
+      }
+    }
+
+    verifyToken();
+  }, [decodedToken]);
+
+  const handleVerify = async (recToken: string) => {
+    setRecaptchaToken(recToken);
     setRecaptchaError(null);
 
-    if (formData && token) {
+    if (formData && recToken) {
       const newFormData = new FormData();
-      newFormData.append('email', email);
-      newFormData.append('recaptchaToken', token);
+
+      // Copy all entries from the stored formData
+      for (const [key, value] of formData.entries()) {
+        newFormData.append(key, value);
+      }
+
+      newFormData.append('recaptchaToken', recToken);
 
       setLoading(true);
       try {
         startTransition(async () => {
-          const result = await forgotPasswordAction(newFormData);
+          const result = await resetPasswordAction(newFormData);
           if (result.error) {
             setError(result.error);
             setSuccess(false);
@@ -67,8 +107,11 @@ const ForgotPasswordPage = () => {
           }
           setLoading(false);
         });
-      } catch {
-        setError('Terjadi kesalahan saat mengirim email. Silakan coba lagi.');
+      } catch (e) {
+        console.error('Error during password reset:', e);
+        setError(
+          'Terjadi kesalahan saat mengatur ulang password. Silakan coba lagi.'
+        );
         setLoading(false);
       }
     }
@@ -77,16 +120,22 @@ const ForgotPasswordPage = () => {
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    setSuccess(false);
 
-    if (!email) {
-      setError('Email diperlukan');
+    // Basic validation
+    if (password.length < 6) {
+      setError('Password harus minimal 6 karakter');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Password tidak cocok');
       return;
     }
 
     // Store form data for recaptcha verification
     const data = new FormData();
-    data.append('email', email);
+    data.append('password', password);
+    data.append('token', decodedToken);
     setFormData(data);
 
     // Show recaptcha
@@ -98,6 +147,56 @@ const ForgotPasswordPage = () => {
     }
   };
 
+  // Show loading state while token is being verified
+  if (tokenChecking) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-violet-800/80 via-[#6032A2] to-[#371D5C]">
+        <div className="rounded-lg border border-white/10 bg-white/5 p-8 text-center text-white">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-white border-t-transparent mx-auto mb-3" />
+          <p>Memverifikasi token reset password...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if token is invalid
+  if (tokenValid === false) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-violet-800/80 via-[#6032A2] to-[#371D5C] px-4 py-8">
+        <motion.div
+          variants={formVariants}
+          initial="hidden"
+          animate="visible"
+          className="w-full max-w-md space-y-6 rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm"
+        >
+          <div className="space-y-2 text-center">
+            <h1 className="text-2xl font-bold tracking-tight text-white">
+              Link Tidak Valid
+            </h1>
+            <p className="text-sm text-orange-300/80">
+              Link reset password tidak valid atau sudah kedaluwarsa.
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
+            <p>
+              Link reset password ini tidak valid atau sudah kedaluwarsa.
+              Silakan meminta link reset password yang baru.
+            </p>
+          </div>
+
+          <Link
+            href="/forgot-password"
+            className="flex w-full items-center justify-center rounded-lg border border-orange-400/50 bg-orange-400/20 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400/30"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Kembali ke halaman lupa password
+          </Link>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-violet-800/80 via-[#6032A2] to-[#371D5C] px-4 py-8">
       <motion.div
@@ -108,10 +207,10 @@ const ForgotPasswordPage = () => {
       >
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-bold tracking-tight text-white">
-            Lupa Password
+            Reset Password
           </h1>
           <p className="text-sm text-orange-300/80">
-            Masukkan email Anda untuk menerima link reset password
+            Silakan buat password baru untuk akun Anda
           </p>
         </div>
 
@@ -130,8 +229,8 @@ const ForgotPasswordPage = () => {
         {success ? (
           <div className="space-y-4">
             <div className="rounded-lg border border-green-500/20 bg-green-500/10 p-4 text-sm text-green-200">
-              Email instruksi reset password telah dikirim. Silakan periksa
-              inbox Anda dan ikuti instruksi di dalamnya.
+              Password Anda berhasil diubah. Silakan login dengan password baru
+              Anda.
             </div>
             <Link
               href="/login"
@@ -146,18 +245,38 @@ const ForgotPasswordPage = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1">
                 <label
-                  htmlFor="email"
+                  htmlFor="password"
                   className="block text-sm font-medium text-white"
                 >
-                  Email
+                  Password Baru
                 </label>
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="password"
+                  name="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white placeholder:text-white/50 focus:border-orange-400/50 focus:outline-none focus:ring-1 focus:ring-orange-400/50"
+                  disabled={loading}
+                  required
+                  minLength={6}
+                />
+                <p className="text-xs text-white/50">Minimal 6 karakter</p>
+              </div>
+
+              <div className="space-y-1">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-white"
+                >
+                  Konfirmasi Password
+                </label>
+                <input
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-white placeholder:text-white/50 focus:border-orange-400/50 focus:outline-none focus:ring-1 focus:ring-orange-400/50"
                   disabled={loading}
                   required
@@ -199,8 +318,8 @@ const ForgotPasswordPage = () => {
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
                 ) : (
                   <>
-                    <Send className="mr-2 h-4 w-4" />
-                    Kirim Link Reset
+                    <LockKeyhole className="mr-2 h-4 w-4" />
+                    Atur Ulang Password
                   </>
                 )}
               </button>
@@ -219,6 +338,4 @@ const ForgotPasswordPage = () => {
       </motion.div>
     </div>
   );
-};
-
-export default ForgotPasswordPage;
+}

@@ -7,6 +7,7 @@ type JWTPayload = {
   role: string;
   profileImage?: string;
   googleUser?: boolean;
+  purpose?: string; // For password reset tokens
 };
 
 const getKey = () => {
@@ -17,11 +18,14 @@ const getKey = () => {
   return new TextEncoder().encode(secret);
 };
 
-export async function sign(payload: JWTPayload) {
+export async function sign(
+  payload: JWTPayload,
+  expirationTime: string = '24h'
+) {
   const jwt = await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('24h')
+    .setExpirationTime(expirationTime)
     .sign(getKey());
 
   return jwt;

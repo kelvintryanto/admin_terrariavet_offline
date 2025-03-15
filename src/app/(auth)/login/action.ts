@@ -175,12 +175,20 @@ export async function loginAction(
     googleUser: userData.googleUser || false,
   });
 
+  // Check if "remember me" is checked
+  const rememberMe = formData.get('remember-me') === 'on';
+
+  // Set different expiration time based on "remember me"
+  const expiresIn = rememberMe
+    ? 1000 * 60 * 60 * 24 * 30 // 30 days if "remember me" is checked
+    : 1000 * 60 * 60 * 24; // 24 hours by default
+
   // Set cookie
   ((await cookies()) as unknown as ResponseCookies).set('token', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    expires: new Date(Date.now() + 1000 * 60 * 60 * 24), // 24 hours
+    expires: new Date(Date.now() + expiresIn),
   });
 
   return {
