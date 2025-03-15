@@ -104,7 +104,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
       img.onload = () => {
         try {
           // Add logo with error handling - move it down by 10 units
-          pdf.addImage(img, "PNG", margin, yPos + 5, 20, 20);
+          pdf.addImage(img, "PNG", margin, yPos + 3, 32, 24);
         } catch (error) {
           console.error("Error adding logo to PDF:", error);
         }
@@ -117,7 +117,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
       };
 
       // Try to load logo with full URL in production
-      const logoUrl = "/logo.png";
+      const logoUrl = "/logo/logo_with_text.png";
 
       img.src = logoUrl;
 

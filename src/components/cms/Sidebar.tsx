@@ -120,7 +120,7 @@ const SidebarCMS = () => {
       >
         <Link href="/cms">
           <SidebarHeader className="p-2 border-b mx-2 hidden lg:flex lg:flex-row">
-            <Image src="/logo.png" alt="Logo" width={40} height={40} />
+            <Image src="/logo.png" alt="Logo" width={45} height={40} />
 
             <div className="">
               <h1 className="font-bold text-xl">TerrariaVet</h1>
