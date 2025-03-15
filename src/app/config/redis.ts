@@ -6,6 +6,9 @@ const redis = new Redis({
   username: process.env.REDIS_USERNAME || "default",
   password: process.env.REDIS_PASSWORD || "",
   db: 0,
+  lazyConnect: true,
+  enableAutoPipelining: true,
+  keepAlive: 1000,
 });
 
 export default redis;
