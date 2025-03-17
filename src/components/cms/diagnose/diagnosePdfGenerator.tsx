@@ -156,33 +156,37 @@ export async function CreateDiagnosePDFTemplate(
         // Header
         yPos += 35;
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(18);
+        pdf.setFontSize(14);
         pdf.text("HASIL DIAGNOSA", pageWidth / 2, yPos, { align: "center" });
 
         // Add invoice number with correct format
-        yPos += 7;
+        yPos += 5;
         pdf.setFontSize(12);
         pdf.text(ensureCorrectFormat(data.dxNumber), pageWidth / 2, yPos, {
           align: "center",
         });
 
         // Client Information
-        yPos += 10;
-        pdf.setFontSize(12);
+        yPos += 8;
+        pdf.setFontSize(10);
         pdf.text("Klien", margin, yPos);
         pdf.setFont("helvetica", "normal");
 
         const addField = (label: string, value: string) => {
-          // Starting X position for the content (after the label)
-          const contentX = margin + 40;
+          // Fixed posittion for better alignment
+          const labelX = margin;
+          const colonX = margin + 45;
+          const valueX = margin + 50;
+
           // Maximum width calculation - from content start to right margin
-          const maxWidth = pageWidth - margin - contentX;
-          const lineHeight = 5; // Line spacing
+          const maxWidth = pageWidth - margin - valueX;
+          const lineHeight = 3; // Line spacing
 
           yPos += 4; // Add space before text
 
           // Write the label
-          pdf.text(`${label}:`, margin, yPos);
+          pdf.text(`${label}`, labelX, yPos);
+          pdf.text(":", colonX, yPos);
 
           // Process text with manual line breaks
           let allLines: string[] = [];
@@ -210,11 +214,11 @@ export async function CreateDiagnosePDFTemplate(
               yPos = margin;
             }
 
-            pdf.text(line, contentX, yPos + index * lineHeight);
+            pdf.text(line, valueX, yPos + index * (lineHeight + 1));
           });
 
           // Add a line below the text - ensure it spans the full width from left to right margin
-          drawLine(yPos + allLines.length * lineHeight);
+          drawLine(yPos + allLines.length * (lineHeight + 1));
 
           // Update yPos for the next field
           yPos += allLines.length * lineHeight + 3;
