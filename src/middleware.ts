@@ -4,13 +4,6 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  const path = request.nextUrl.pathname;
-
-  // Only apply middleware to CMS routes
-  if (!path.startsWith('/cms')) {
-    return NextResponse.next();
-  }
-
   try {
     const user = await getUserFromRequest();
 
@@ -37,5 +30,5 @@ export async function middleware(request: NextRequest) {
 
 // Configure which routes to run middleware on
 export const config = {
-  matcher: ['/cms/:path*'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|login).*)'],
 };

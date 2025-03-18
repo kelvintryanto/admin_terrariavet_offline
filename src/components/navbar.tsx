@@ -111,7 +111,7 @@ export function NavBar() {
               user.role === "admin" ||
               user.role === "admin2") && (
               <DropdownMenuItem asChild>
-                <Link href="/cms" className="cursor-pointer">
+                <Link href="/dashboard" className="cursor-pointer">
                   <SlidersVertical className="mr-2 h-4 w-4" />
                   CMS
                 </Link>

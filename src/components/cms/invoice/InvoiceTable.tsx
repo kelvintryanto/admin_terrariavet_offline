@@ -53,12 +53,12 @@ export default function InvoiceTable({
   }, []);
 
   const handleInvoiceClick = (invoiceId: string) => {
-    router.push(`/cms/invoice/${invoiceId}`);
+    router.push(`/invoice/${invoiceId}`);
   };
 
   const handleEdit = (invoiceId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/cms/invoice/${invoiceId}/edit`);
+    router.push(`/invoice/${invoiceId}/edit`);
   };
 
   const handleDelete = async (invoiceId: string, e: React.MouseEvent) => {

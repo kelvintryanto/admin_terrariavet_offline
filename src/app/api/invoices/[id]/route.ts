@@ -1,5 +1,4 @@
 import { withAuth } from '@/app/api/middleware';
-import redis from '@/app/config/redis';
 import {
   deleteInvoice,
   getInvoiceById,
@@ -20,17 +19,9 @@ export async function GET(
     const { id } = await params;
     const invoice = await getInvoiceById(id);
 
-    const cachedInvoice = await redis.get(`invoice:${id}`);
-
-    if (cachedInvoice) {
-      return NextResponse.json(JSON.parse(cachedInvoice));
-    }
-
     if (!invoice) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
     }
-
-    await redis.set(`invoice:${id}`, JSON.stringify(invoice));
 
     return NextResponse.json(invoice);
   } catch (error) {
@@ -57,9 +48,6 @@ export async function PUT(
     try {
       const { id } = await params;
       const data = await request.json();
-
-      await redis.del(`invoice:${id}`);
-      await redis.del(`invoices`);
 
       const result = await updateInvoice(id, data);
       return NextResponse.json(result);
@@ -88,9 +76,6 @@ export async function DELETE(
     try {
       const { id } = await params;
       await deleteInvoice(id);
-
-      await redis.del(`invoice:${id}`);
-      await redis.del(`invoices`);
 
       return NextResponse.json({ message: 'Invoice deleted successfully' });
     } catch (error) {

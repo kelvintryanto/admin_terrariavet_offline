@@ -35,7 +35,6 @@ interface AuthUser {
   name: string;
   role: string;
   profileImage?: string;
-  googleUser?: boolean;
 }
 
 // Function to verify reCAPTCHA token
@@ -172,7 +171,6 @@ export async function loginAction(
     name: userData.name,
     role: userData.role,
     profileImage: userData.profileImage,
-    googleUser: userData.googleUser || false,
   });
 
   // Check if "remember me" is checked
@@ -199,8 +197,6 @@ export async function loginAction(
       name: userData.name,
       email: userData.email,
     },
-    redirect: ['super_admin', 'admin', 'admin2'].includes(userData.role)
-      ? '/cms'
-      : '/',
+    redirect: '/dashboard',
   };
 }

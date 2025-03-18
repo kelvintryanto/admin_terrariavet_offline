@@ -86,15 +86,6 @@ export async function forgotPasswordAction(
       };
     }
 
-    // Check if it's a Google user (these users shouldn't reset password via email)
-    if (customer.googleUser) {
-      return {
-        error:
-          'Akun ini menggunakan Google untuk login. Silakan login dengan Google.',
-        success: false,
-      };
-    }
-
     const resetToken = await sign(
       {
         id: customer._id.toString(),

@@ -21,6 +21,8 @@ export interface Diagnose {
   symptom: string;
   description: string;
   temperature: number;
+  weight: number;
+  bloodPressure: string;
 
   // didefinisikan dari model diagnose.ts
   createdAt: string;

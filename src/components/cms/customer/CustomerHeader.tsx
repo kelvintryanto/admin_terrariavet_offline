@@ -10,7 +10,7 @@ interface CustomerHeaderProps {
 export function CustomerHeader({ onEdit, onDelete }: CustomerHeaderProps) {
   return (
     <div className="flex items-center justify-between w-full">
-      <Link href="/cms/customer">
+      <Link href="/customer">
         <Button
           variant="ghost"
           className="gap-1 sm:gap-2 h-8 sm:h-9 px-2 sm:px-4"

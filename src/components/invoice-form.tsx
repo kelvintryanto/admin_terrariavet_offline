@@ -625,7 +625,7 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
       });
 
       // Redirect to invoice page
-      router.push('/cms/invoice');
+      router.push('/invoice');
     } catch (error) {
       console.error('Error creating invoice:', error);
       toast({

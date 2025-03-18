@@ -50,12 +50,12 @@ export function CustomerTable({
   const { toast } = useToast();
 
   const handleCustomerClick = (customerId: string) => {
-    router.push(`/cms/customer/${customerId}`);
+    router.push(`/customer/${customerId}`);
   };
 
   const handleEdit = (customerId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/cms/customer/${customerId}`);
+    router.push(`/customer/${customerId}`);
   };
 
   const handleDelete = async (customerId: string, e: React.MouseEvent) => {

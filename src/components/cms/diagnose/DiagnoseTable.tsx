@@ -54,12 +54,12 @@ export default function DiagnoseTable({
   }, []);
 
   const handleDiagnoseClick = (diagnoseId: string) => {
-    router.push(`/cms/diagnose/${diagnoseId}`);
+    router.push(`/diagnose/${diagnoseId}`);
   };
 
   const handleEdit = (diagnoseId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/cms/diagnose/${diagnoseId}/edit`);
+    router.push(`/diagnose/${diagnoseId}/edit`);
   };
 
   const handleDelete = async (diagnoseId: string, e: React.MouseEvent) => {

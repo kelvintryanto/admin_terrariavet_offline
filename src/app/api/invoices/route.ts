@@ -1,5 +1,4 @@
 import { withAuth } from '@/app/api/middleware';
-import redis from '@/app/config/redis';
 import {
   createInvoice,
   getAllInvoices,
@@ -13,15 +12,6 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET() {
   try {
     const invoices = await getAllInvoices();
-
-    const cachedInvoices = await redis.get('invoices');
-
-    if (cachedInvoices) {
-      return NextResponse.json(JSON.parse(cachedInvoices));
-    }
-
-    await redis.set('invoices', JSON.stringify(invoices));
-
     return NextResponse.json(invoices);
   } catch (error) {
     console.error('Error on getting invoice data', error);
@@ -43,8 +33,6 @@ export async function POST(request: NextRequest) {
 
     try {
       const data = await request.json();
-
-      await redis.del('invoices');
 
       // Get current date components in WIB timezone
       const now = getWIBDate();

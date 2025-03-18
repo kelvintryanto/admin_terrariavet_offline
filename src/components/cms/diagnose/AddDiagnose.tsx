@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { Breed } from "@/app/models/breed";
-import { Customer } from "@/app/models/customer";
-import { Dog } from "@/app/models/dog";
-import { formatDogAge } from "@/app/utils/format";
-import { ClientSnapShotData, DogSnapShotData } from "@/data/types";
-import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
-import { Button } from "../../ui/button";
+import { Breed } from '@/app/models/breed';
+import { Customer } from '@/app/models/customer';
+import { Dog } from '@/app/models/dog';
+import { formatDogAge } from '@/app/utils/format';
+import { ClientSnapShotData, DogSnapShotData } from '@/data/types';
+import { useToast } from '@/hooks/use-toast';
+import { useEffect, useState } from 'react';
+import { Button } from '../../ui/button';
 import {
   Dialog,
   DialogContent,
@@ -15,12 +15,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../../ui/dialog";
-import { Input } from "../../ui/input";
-import { Label } from "../../ui/label";
-import { Textarea } from "../../ui/textarea";
-import CustomerSearchInput from "../customer/CustomerSearch";
-import DogSearchInput from "../customer/DogSearch";
+} from '../../ui/dialog';
+import { Input } from '../../ui/input';
+import { Label } from '../../ui/label';
+import { Textarea } from '../../ui/textarea';
+import CustomerSearchInput from '../customer/CustomerSearch';
+import DogSearchInput from '../customer/DogSearch';
 
 export default function AddDiagnose({
   onDiagnoseAdded,
@@ -39,17 +39,17 @@ export default function AddDiagnose({
 
   const fetchBreeds = async () => {
     try {
-      const response = await fetch("/api/breeds");
-      if (!response.ok) throw new Error("Failed to fetch breeds");
+      const response = await fetch('/api/breeds');
+      if (!response.ok) throw new Error('Failed to fetch breeds');
 
       const data = await response.json();
       setBreeds(data);
     } catch (error) {
-      console.error("Error fetching breeds:", error);
+      console.error('Error fetching breeds:', error);
       toast({
-        title: "Error",
-        description: "Gagal mengambil data ras anjing",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Gagal mengambil data ras anjing',
+        variant: 'destructive',
       });
     }
   };
@@ -83,7 +83,7 @@ export default function AddDiagnose({
     };
 
     const formData = new FormData(e.currentTarget);
-    const temperatureValue = formData.get("temperature") as string;
+    const temperatureValue = formData.get('temperature') as string;
     // Ensure temperature has exactly one decimal place
     let parsedTemperature = parseFloat(temperatureValue);
     if (!isNaN(parsedTemperature)) {
@@ -91,38 +91,48 @@ export default function AddDiagnose({
       parsedTemperature = Math.round(parsedTemperature * 10) / 10;
     }
 
+    // Get and parse weight value
+    const weightValue = formData.get('weight') as string;
+    let parsedWeight = parseFloat(weightValue);
+    if (!isNaN(parsedWeight)) {
+      // Round to 1 decimal place
+      parsedWeight = Math.round(parsedWeight * 10) / 10;
+    }
+
     const body = {
-      doctorName: formData.get("doctorName") as string,
+      doctorName: formData.get('doctorName') as string,
       clientId: selectedCustomer?._id.toString() as string,
       clientSnapShot: clientData as ClientSnapShotData,
       dogId: selectedDog?._id.toString() as string,
       dogSnapShot: dogData as DogSnapShotData,
       temperature: isNaN(parsedTemperature) ? 0 : parsedTemperature,
-      symptom: formData.get("symptom") as string,
-      description: formData.get("description") as string,
+      weight: isNaN(parsedWeight) ? 0 : parsedWeight,
+      bloodPressure: formData.get('bloodPressure') as string,
+      symptom: formData.get('symptom') as string,
+      description: formData.get('description') as string,
     };
 
     try {
-      const response = await fetch("/api/diagnoses", {
-        method: "POST",
+      const response = await fetch('/api/diagnoses', {
+        method: 'POST',
         body: JSON.stringify(body),
       });
       if (!response.ok) {
-        throw new Error("Failed to create diagnose");
+        throw new Error('Failed to create diagnose');
       }
       toast({
-        title: "Berhasil",
-        description: "Diagnosa berhasil ditambahkan",
+        title: 'Berhasil',
+        description: 'Diagnosa berhasil ditambahkan',
       });
 
       setCreateDialogOpen(false);
       onDiagnoseAdded();
     } catch (error) {
-      console.log("error", error);
+      console.log('error', error);
       toast({
-        title: "Error",
-        description: "Gagal menambahkan diagnosa",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Gagal menambahkan diagnosa',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -135,7 +145,7 @@ export default function AddDiagnose({
 
       // If customer has no _id or it's not a string/ObjectId, log an error
       if (!customer || !customer._id) {
-        console.error("Invalid customer selected:", customer);
+        console.error('Invalid customer selected:', customer);
         setDogs([]);
         setSelectedDog(null);
         return;
@@ -144,7 +154,7 @@ export default function AddDiagnose({
       // Fetch fresh customer data to ensure we have all dogs
       const response = await fetch(`/api/customers/${customer._id}`);
       if (!response.ok) {
-        throw new Error("Failed to fetch customer details");
+        throw new Error('Failed to fetch customer details');
       }
 
       const data = await response.json();
@@ -152,15 +162,15 @@ export default function AddDiagnose({
 
       // Ensure dogs array exists and is properly formatted
       if (fullCustomer && Array.isArray(fullCustomer.dogs)) {
-        console.log("Customer dogs fetched:", fullCustomer.dogs.length);
+        console.log('Customer dogs fetched:', fullCustomer.dogs.length);
         setDogs(fullCustomer.dogs);
       } else {
-        console.error("Dogs not found in customer data:", fullCustomer);
+        console.error('Dogs not found in customer data:', fullCustomer);
         // Default to empty array or original customer dogs if available
         setDogs(customer.dogs || []);
       }
     } catch (error) {
-      console.error("Error fetching customer details:", error);
+      console.error('Error fetching customer details:', error);
       // Default to original customer dogs if available
       setDogs(customer.dogs || []);
     }
@@ -172,23 +182,23 @@ export default function AddDiagnose({
   const handleSelectDog = (dog: Dog) => {
     try {
       if (!dog || !dog._id) {
-        console.error("Invalid dog selected:", dog);
+        console.error('Invalid dog selected:', dog);
         toast({
-          title: "Error",
-          description: "Invalid dog data selected",
-          variant: "destructive",
+          title: 'Error',
+          description: 'Invalid dog data selected',
+          variant: 'destructive',
         });
         return;
       }
 
-      console.log("Dog selected:", dog.name);
+      console.log('Dog selected:', dog.name);
       setSelectedDog(dog);
     } catch (error) {
-      console.error("Error selecting dog:", error);
+      console.error('Error selecting dog:', error);
       toast({
-        title: "Error",
-        description: "Failed to select dog",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to select dog',
+        variant: 'destructive',
       });
     }
   };
@@ -206,7 +216,7 @@ export default function AddDiagnose({
   // Log whenever selected dog changes (for debugging)
   useEffect(() => {
     if (selectedDog) {
-      console.log("Selected dog updated in AddDiagnose:", selectedDog.name);
+      console.log('Selected dog updated in AddDiagnose:', selectedDog.name);
     }
   }, [selectedDog]);
 
@@ -249,7 +259,7 @@ export default function AddDiagnose({
                   <div className="border rounded-md p-4">
                     <div className="text-xs sm:text-sm text-muted-foreground grid grid-cols-2 gap-x-2 gap-y-1">
                       <div>
-                        Ras:{" "}
+                        Ras:{' '}
                         <span className="break-words">
                           {selectedDog.customBreed ||
                             breeds.find(
@@ -257,11 +267,11 @@ export default function AddDiagnose({
                                 b._id.toString() ===
                                 selectedDog.breedId?.toString()
                             )?.name ||
-                            "Unknown"}
+                            'Unknown'}
                         </span>
                       </div>
                       <div>
-                        Umur:{" "}
+                        Umur:{' '}
                         {formatDogAge(
                           selectedDog.birthYear,
                           selectedDog.birthMonth
@@ -270,32 +280,32 @@ export default function AddDiagnose({
                       <div>Warna: {selectedDog.color}</div>
                       <div>Berat: {selectedDog.weight} kg</div>
                       <div>
-                        Jenis Kelamin:{" "}
-                        {selectedDog.sex === "male" ? "Jantan" : "Betina"}
+                        Jenis Kelamin:{' '}
+                        {selectedDog.sex === 'male' ? 'Jantan' : 'Betina'}
                       </div>
                       <div className="col-span-2">
-                        Vaksin Terakhir:{" "}
+                        Vaksin Terakhir:{' '}
                         {selectedDog.lastVaccineDate
                           ? new Date(
                               selectedDog.lastVaccineDate
-                            ).toLocaleDateString("id-ID", {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
+                            ).toLocaleDateString('id-ID', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
                             })
-                          : "Belum ada data"}
+                          : 'Belum ada data'}
                       </div>
                       <div className="col-span-2">
-                        Obat Cacing Terakhir:{" "}
+                        Obat Cacing Terakhir:{' '}
                         {selectedDog.lastDewormDate
                           ? new Date(
                               selectedDog.lastDewormDate
-                            ).toLocaleDateString("id-ID", {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
+                            ).toLocaleDateString('id-ID', {
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
                             })
-                          : "Belum ada data"}
+                          : 'Belum ada data'}
                       </div>
                     </div>
                   </div>
@@ -315,17 +325,17 @@ export default function AddDiagnose({
                   const target = e.target as HTMLInputElement;
                   const value = target.value;
                   // First, remove any invalid characters for numbers
-                  let sanitizedValue = value.replace(/[^0-9.]/g, "");
+                  let sanitizedValue = value.replace(/[^0-9.]/g, '');
 
                   // Ensure there's at most one decimal point
-                  const parts = sanitizedValue.split(".");
+                  const parts = sanitizedValue.split('.');
                   if (parts.length > 2) {
-                    sanitizedValue = parts[0] + "." + parts.slice(1).join("");
+                    sanitizedValue = parts[0] + '.' + parts.slice(1).join('');
                   }
 
                   // If there's a decimal point, limit to 1 decimal place
                   if (parts.length === 2 && parts[1].length > 1) {
-                    sanitizedValue = parts[0] + "." + parts[1].substring(0, 1);
+                    sanitizedValue = parts[0] + '.' + parts[1].substring(0, 1);
                   }
 
                   // Update the input value if it's different from the original
@@ -333,6 +343,48 @@ export default function AddDiagnose({
                     target.value = sanitizedValue;
                   }
                 }}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="weight">Berat (kg)</Label>
+              <Input
+                id="weight"
+                name="weight"
+                type="number"
+                step="0.1"
+                placeholder="7.5"
+                onInput={(e) => {
+                  const target = e.target as HTMLInputElement;
+                  const value = target.value;
+                  // First, remove any invalid characters for numbers
+                  let sanitizedValue = value.replace(/[^0-9.]/g, '');
+
+                  // Ensure there's at most one decimal point
+                  const parts = sanitizedValue.split('.');
+                  if (parts.length > 2) {
+                    sanitizedValue = parts[0] + '.' + parts.slice(1).join('');
+                  }
+
+                  // If there's a decimal point, limit to 1 decimal place
+                  if (parts.length === 2 && parts[1].length > 1) {
+                    sanitizedValue = parts[0] + '.' + parts[1].substring(0, 1);
+                  }
+
+                  // Update the input value if it's different from the original
+                  if (value !== sanitizedValue) {
+                    target.value = sanitizedValue;
+                  }
+                }}
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="bloodPressure">Tekanan Darah</Label>
+              <Input
+                id="bloodPressure"
+                name="bloodPressure"
+                placeholder="120/80"
               />
             </div>
 

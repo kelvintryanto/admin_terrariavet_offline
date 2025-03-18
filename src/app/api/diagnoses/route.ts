@@ -1,5 +1,4 @@
 import { withAuth } from '@/app/api/middleware';
-import redis from '@/app/config/redis';
 import {
   CreateDiagnose,
   createDiagnose,
@@ -12,15 +11,6 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function GET() {
   try {
     const diagnoses = await getAllDiagnoses();
-
-    const cachedDiagnoses = await redis.get('diagnoses');
-
-    if (cachedDiagnoses) {
-      return NextResponse.json(JSON.parse(cachedDiagnoses));
-    }
-
-    await redis.set('diagnoses', JSON.stringify(diagnoses));
-
     return NextResponse.json(diagnoses);
   } catch (error: unknown) {
     console.error('Failed to fetch diagnoses', error);
@@ -42,8 +32,6 @@ export async function POST(request: NextRequest) {
 
     try {
       const data = await request.json();
-
-      await redis.del('diagnoses');
 
       /**
        * di post ini bikin DXNumber dan DX datenya
