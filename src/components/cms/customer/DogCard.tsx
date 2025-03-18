@@ -3,7 +3,7 @@ import { Dog } from '@/app/models/dog';
 import { formatDogAge } from '@/app/utils/format';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Dog as DogIcon, Pencil, Trash2 } from 'lucide-react';
+import { Mars, Pencil, Trash2, Venus } from 'lucide-react';
 import { useState } from 'react';
 import { EditDogDialog } from './EditDogDialog';
 
@@ -63,17 +63,26 @@ export function DogCard({
       })
     : 'Belum ada data';
 
+  // Gender icon and color
+  const GenderIcon = dog.sex === 'male' ? Mars : Venus;
+  const genderColor = dog.sex === 'male' ? 'text-blue-500' : 'text-pink-500';
+
   return (
     <>
       <Card className="mb-2 sm:mb-4 overflow-hidden">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1 sm:pb-2 pt-2 sm:pt-3 px-3 sm:px-4">
-          <CardTitle className="text-xs sm:text-sm font-medium">
-            <div className="flex items-center gap-1 sm:gap-2">
-              <DogIcon className="h-3 w-3 sm:h-4 sm:w-4" />
-              {dog.name}
-            </div>
-          </CardTitle>
-          <div className="flex items-center gap-1">
+        <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-1 sm:pb-2 pt-2 sm:pt-3 px-3 sm:px-4">
+          <div>
+            <CardTitle className="text-xs sm:text-sm font-medium">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <GenderIcon
+                  className={`h-3.5 w-3.5 sm:h-4.5 sm:w-4.5 ${genderColor}`}
+                />
+                {dog.name}
+              </div>
+            </CardTitle>
+            <p className="text-muted-foreground text-xs mt-0.5">{breedName}</p>
+          </div>
+          <div className="flex items-center gap-1 mt-1">
             {userRole === 'super_admin' && (
               <>
                 <Button
@@ -103,11 +112,6 @@ export function DogCard({
             {/* Left column */}
             <div className="space-y-2">
               <div className="flex flex-col">
-                <span className="text-muted-foreground">Ras:</span>
-                <span className="font-medium truncate">{breedName}</span>
-              </div>
-
-              <div className="flex flex-col">
                 <span className="text-muted-foreground">Umur:</span>
                 <span className="font-medium">
                   {formatDogAge(dog.birthYear, dog.birthMonth)}
@@ -127,13 +131,6 @@ export function DogCard({
 
             {/* Right column */}
             <div className="space-y-2">
-              <div className="flex flex-col">
-                <span className="text-muted-foreground">Jenis Kelamin:</span>
-                <span className="font-medium">
-                  {dog.sex === 'male' ? 'Jantan' : 'Betina'}
-                </span>
-              </div>
-
               <div className="flex flex-col">
                 <span className="text-muted-foreground">Tanggal Lahir:</span>
                 <span className="font-medium">

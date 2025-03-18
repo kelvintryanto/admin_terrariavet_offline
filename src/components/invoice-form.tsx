@@ -62,6 +62,8 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
     tax: 0,
     subtotal: 0,
     type: type,
+    paymentMethod: 'Cash',
+    customPaymentMethod: '',
   });
 
   const [depositText, setDepositText] = useState('');
@@ -580,6 +582,11 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
         tax: formData.tax,
         subtotal: formData.subtotal,
         type: type,
+        paymentMethod: formData.paymentMethod,
+        customPaymentMethod:
+          formData.paymentMethod === 'Other'
+            ? formData.customPaymentMethod
+            : undefined,
       };
 
       // Save invoice to database
@@ -1499,6 +1506,51 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
                   </h2>
                 </div>
                 <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="paymentMethod">Metode Pembayaran</Label>
+                    <div className="flex gap-2">
+                      <select
+                        id="paymentMethod"
+                        value={formData.paymentMethod}
+                        onChange={(e) => {
+                          const value = e.target
+                            .value as InvoiceData['paymentMethod'];
+                          setFormData((prev) => ({
+                            ...prev,
+                            paymentMethod: value,
+                          }));
+                        }}
+                        className={`flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                          formData.paymentMethod === 'Other'
+                            ? 'w-1/2'
+                            : 'w-full'
+                        }`}
+                      >
+                        <option value="Cash">Cash</option>
+                        <option value="Transfer">Transfer</option>
+                        <option value="Kartu Kredit">Kartu Kredit</option>
+                        <option value="Qris">Qris</option>
+                        <option value="Gopay">Gopay</option>
+                        <option value="Other">Other</option>
+                      </select>
+
+                      {formData.paymentMethod === 'Other' && (
+                        <Input
+                          id="customPaymentMethod"
+                          value={formData.customPaymentMethod}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              customPaymentMethod: e.target.value,
+                            }))
+                          }
+                          placeholder="Input pembayaran lainnya"
+                          className="w-1/2"
+                        />
+                      )}
+                    </div>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="subtotal">Subtotal</Label>
                     <Input

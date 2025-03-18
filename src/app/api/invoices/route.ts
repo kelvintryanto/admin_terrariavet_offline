@@ -79,6 +79,9 @@ export async function POST(request: NextRequest) {
         tax: data.tax,
         subtotal: data.subtotal,
         type: data.type,
+        paymentMethod: data.paymentMethod || 'Cash',
+        customPaymentMethod:
+          data.paymentMethod === 'Other' ? data.customPaymentMethod : undefined,
       };
 
       const result = await createInvoice(processedData);

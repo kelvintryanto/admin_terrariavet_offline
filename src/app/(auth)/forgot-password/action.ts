@@ -1,6 +1,6 @@
 'use server';
 
-import { getCustomerByEmail } from '@/app/models/customer';
+import { getUserByEmail } from '@/app/models/user';
 import { sendPasswordResetEmail } from '@/app/utils/email';
 import { sign } from '@/app/utils/jwt';
 import { z } from 'zod';
@@ -75,10 +75,10 @@ export async function forgotPasswordAction(
       };
     }
 
-    const customer = await getCustomerByEmail(email);
+    const user = await getUserByEmail(email);
 
     // Return error if email doesn't exist in the database
-    if (!customer) {
+    if (!user) {
       return {
         error:
           'Email tidak ditemukan dalam sistem. Silakan periksa email Anda.',
@@ -88,10 +88,10 @@ export async function forgotPasswordAction(
 
     const resetToken = await sign(
       {
-        id: customer._id.toString(),
-        email: customer.email || '',
-        name: customer.name,
-        role: customer.role,
+        id: user._id.toString(),
+        email: user.email || '',
+        name: user.name,
+        role: user.role,
         purpose: 'password_reset',
       },
       '1h' // 1 hour expiry
@@ -101,10 +101,10 @@ export async function forgotPasswordAction(
     const encodedToken = encodeURIComponent(resetToken);
 
     // Create reset URL
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password/${encodedToken}`;
+    const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password/${encodedToken}`;
 
     try {
-      await sendPasswordResetEmail(email, customer.name, resetUrl);
+      await sendPasswordResetEmail(email, user.name, resetUrl);
     } catch (emailError) {
       throw emailError; // Re-throw to be caught by the outer catch
     }

@@ -77,3 +77,23 @@ export const registerUserWithGoogle = async (userData: GoogleUser) => {
   const result = await db.collection(COLLECTION).insertOne(user);
   return result;
 };
+
+export const updatePassword = async (userId: string, newPassword: string) => {
+  const db = await getDb();
+
+  const result = await db.collection(COLLECTION).updateOne(
+    { _id: ObjectId.createFromHexString(userId) },
+    {
+      $set: {
+        password: newPassword,
+        updatedAt: new Date().toISOString(),
+      },
+    }
+  );
+
+  if (result.matchedCount === 0) {
+    throw new Error('User not found');
+  }
+
+  return result;
+};

@@ -517,7 +517,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
         // Function to add breakdown line
         const addBreakdownLine = (
           label: string,
-          value: number,
+          value: string | number,
           isTotal: boolean = false
         ) => {
           if (isTotal) {
@@ -529,7 +529,11 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
           yPos += lineHeight;
           pdf.setFontSize(8); // Reduced from 10
           pdf.text(label, breakdownLeft, yPos);
-          pdf.text(`Rp ${value.toLocaleString()}`, pageWidth - margin, yPos, {
+
+          const valueText =
+            typeof value === 'number' ? `Rp ${value.toLocaleString()}` : value;
+
+          pdf.text(valueText, pageWidth - margin, yPos, {
             align: 'right',
           });
           if (isTotal) {
@@ -537,6 +541,14 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
             yPos += lineHeight / 2;
           }
         };
+
+        // Add payment method information
+        addBreakdownLine(
+          'Metode Pembayaran',
+          data.paymentMethod === 'Other' && data.customPaymentMethod
+            ? data.customPaymentMethod
+            : data.paymentMethod
+        );
 
         // Add breakdown items
         addBreakdownLine('Subtotal', data.subtotal);

@@ -55,6 +55,14 @@ export interface InvoiceData {
   tax: number;
   subtotal: number;
   type: 'inpatient' | 'outpatient';
+  paymentMethod:
+    | 'Cash'
+    | 'Transfer'
+    | 'Kartu Kredit'
+    | 'Qris'
+    | 'Gopay'
+    | 'Other';
+  customPaymentMethod?: string;
 }
 
 export interface ClientSnapShotData {
