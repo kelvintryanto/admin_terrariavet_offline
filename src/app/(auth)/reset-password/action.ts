@@ -1,8 +1,10 @@
 'use server';
 
+import { blacklistToken } from '@/app/models/token';
 import { getUserById, updatePassword } from '@/app/models/user';
 import { hashPass } from '@/app/utils/bcrypt';
 import { decode } from '@/app/utils/jwt';
+import { cookies } from 'next/headers';
 import { z } from 'zod';
 
 // Schema for validating password reset data
@@ -111,6 +113,13 @@ export async function resetPasswordAction(
 
     // Update user's password
     await updatePassword(decoded.id, hashedPassword);
+
+    // Blacklist the token so it can't be used again
+    await blacklistToken(token, decoded.id);
+
+    // Clear the authentication cookie to force logout
+    const cookieStore = await cookies();
+    cookieStore.delete('token');
 
     return {
       error: null,

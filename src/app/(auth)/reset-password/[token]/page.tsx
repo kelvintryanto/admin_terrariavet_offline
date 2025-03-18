@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Check, Lock } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState, useTransition } from 'react';
+import { use, useEffect, useState, useTransition } from 'react';
 
 const formVariants = {
   hidden: {
@@ -23,8 +23,12 @@ const formVariants = {
   },
 };
 
-const ResetPasswordPage = ({ params }: { params: { token: string } }) => {
-  const { token } = params;
+const ResetPasswordPage = ({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) => {
+  const { token } = use(params);
   const router = useRouter();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -52,15 +56,22 @@ const ResetPasswordPage = ({ params }: { params: { token: string } }) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ token }),
+          cache: 'no-store', // Ensure we don't cache reset token verification responses
         });
 
         const data = await response.json();
 
         if (!response.ok) {
-          setTokenError(
-            data.error ||
-              'Link reset password tidak valid atau sudah kedaluwarsa.'
-          );
+          let errorMessage =
+            'Link reset password tidak valid atau sudah kedaluwarsa.';
+
+          if (response.status === 429) {
+            errorMessage = 'Terlalu banyak permintaan. Coba lagi nanti.';
+          } else if (data.error) {
+            errorMessage = data.error;
+          }
+
+          setTokenError(errorMessage);
           setTokenVerified(false);
         } else {
           setTokenVerified(true);
@@ -77,7 +88,13 @@ const ResetPasswordPage = ({ params }: { params: { token: string } }) => {
       }
     };
 
-    verifyToken();
+    if (token) {
+      verifyToken();
+    } else {
+      setTokenError('Link reset password tidak valid.');
+      setTokenVerified(false);
+      setIsInitialLoading(false);
+    }
   }, [token]);
 
   useEffect(() => {
@@ -110,10 +127,8 @@ const ResetPasswordPage = ({ params }: { params: { token: string } }) => {
             setError(null);
             setSuccess(true);
 
-            // Redirect to login after successful password reset
-            setTimeout(() => {
-              router.push('/login');
-            }, 3000);
+            // Redirect to login immediately after successful password reset
+            router.push('/login');
           }
           setLoading(false);
         });
@@ -223,8 +238,8 @@ const ResetPasswordPage = ({ params }: { params: { token: string } }) => {
               <div className="flex items-center space-x-2">
                 <Check className="h-5 w-5 text-green-400" />
                 <span>
-                  Password berhasil diubah. Anda akan dialihkan ke halaman
-                  login...
+                  Password berhasil diubah. Anda akan dialihkan ke halaman login
+                  untuk masuk kembali.
                 </span>
               </div>
             </div>

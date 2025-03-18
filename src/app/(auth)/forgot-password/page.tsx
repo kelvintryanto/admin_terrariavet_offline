@@ -2,7 +2,7 @@
 
 import ReCaptcha from '@/components/ReCaptcha';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, RefreshCw, Send } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState, useTransition } from 'react';
 import { forgotPasswordAction } from './action';
@@ -33,6 +33,8 @@ const ForgotPasswordPage = () => {
   const [formData, setFormData] = useState<FormData | null>(null);
   const [, startTransition] = useTransition();
   const [isMobile, setIsMobile] = useState(false);
+  const [canResend, setCanResend] = useState(false);
+  const [countdown, setCountdown] = useState(60); // 60 seconds countdown
 
   useEffect(() => {
     setIsMobile(window.innerWidth <= 1024);
@@ -44,6 +46,28 @@ const ForgotPasswordPage = () => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Countdown timer effect after successful email send
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+
+    if (success && countdown > 0) {
+      timer = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            setCanResend(true);
+            clearInterval(timer);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [success, countdown]);
 
   const handleVerify = async (token: string) => {
     setRecaptchaToken(token);
@@ -64,6 +88,9 @@ const ForgotPasswordPage = () => {
           } else {
             setError(null);
             setSuccess(true);
+            setCanResend(false);
+            setCountdown(60); // Reset countdown
+            setShowRecaptcha(false); // Hide recaptcha after success
           }
           setLoading(false);
         });
@@ -71,6 +98,36 @@ const ForgotPasswordPage = () => {
         setError('Terjadi kesalahan saat mengirim email. Silakan coba lagi.');
         setLoading(false);
       }
+    }
+  };
+
+  const handleResend = () => {
+    if (!canResend) return;
+
+    setCanResend(false);
+    setCountdown(60);
+
+    // Create a new form data for resend
+    const newFormData = new FormData();
+    newFormData.append('email', email);
+
+    // No need to show reCAPTCHA, directly send the email
+    setLoading(true);
+    try {
+      startTransition(async () => {
+        const result = await forgotPasswordAction(newFormData);
+        if (result.error) {
+          setError(result.error);
+          setSuccess(false);
+        } else {
+          setError(null);
+          setSuccess(true);
+        }
+        setLoading(false);
+      });
+    } catch {
+      setError('Terjadi kesalahan saat mengirim email. Silakan coba lagi.');
+      setLoading(false);
     }
   };
 
@@ -133,13 +190,33 @@ const ForgotPasswordPage = () => {
               Email instruksi reset password telah dikirim. Silakan periksa
               inbox Anda dan ikuti instruksi di dalamnya.
             </div>
-            <Link
-              href="/login"
-              className="flex w-full items-center justify-center rounded-lg border border-orange-400/50 bg-orange-400/20 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400/30"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Kembali ke halaman login
-            </Link>
+
+            <div className="flex flex-col space-y-3">
+              <button
+                onClick={handleResend}
+                disabled={!canResend || loading}
+                className="flex w-full items-center justify-center rounded-lg border border-orange-400/50 bg-orange-400/20 px-4 py-2 text-sm font-medium text-white hover:bg-orange-400/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    {canResend
+                      ? 'Kirim Ulang Email'
+                      : `Kirim Ulang (${countdown}s)`}
+                  </>
+                )}
+              </button>
+
+              <Link
+                href="/login"
+                className="flex w-full items-center justify-center rounded-lg border border-white/20 bg-white/5 px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Kembali ke halaman login
+              </Link>
+            </div>
           </div>
         ) : (
           <>
