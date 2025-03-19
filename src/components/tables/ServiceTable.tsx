@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { canDeleteCategory, canEditCategory } from '@/app/utils/auth';
-import { Button } from '@/components/ui/button';
+import { canDeleteCategory, canEditCategory } from "@/app/utils/auth";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -9,10 +9,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
-import { Service } from '@/data/types';
-import { formatRupiah } from '@/lib/utils';
-import { Edit, Trash } from 'lucide-react';
+} from "@/components/ui/table";
+import { Service } from "@/data/types";
+import { formatRupiah } from "@/lib/utils";
+import { Edit, Trash } from "lucide-react";
 
 interface ServiceTableProps {
   services: Service[];
@@ -34,6 +34,7 @@ export function ServiceTable({
       <TableHeader>
         <TableRow>
           <TableHead className="text-center">No</TableHead>
+          <TableHead>Kode</TableHead>
           <TableHead>Nama</TableHead>
           <TableHead>Deskripsi</TableHead>
           <TableHead className="text-right">Harga</TableHead>
@@ -47,10 +48,14 @@ export function ServiceTable({
           <TableRow
             key={service._id?.toString()}
             className="cursor-pointer"
-            onClick={() => onRowClick(service._id?.toString() || '')}
+            onClick={() => onRowClick(service._id?.toString() || "")}
           >
             <TableCell className="text-center">{index + 1}</TableCell>
-            <TableCell>{service.name}</TableCell>
+            <TableCell>{service.kode}</TableCell>
+            <TableCell className="flex flex-col gap-1">
+              <h1>{service.name}</h1>
+              <h3 className="text-gray-400">{service.category}</h3>
+            </TableCell>
             <TableCell>
               <div className="max-w-xs truncate">{service.description}</div>
             </TableCell>
@@ -66,7 +71,7 @@ export function ServiceTable({
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onEdit(service._id?.toString() || '');
+                        onEdit(service._id?.toString() || "");
                       }}
                       title="Edit"
                     >
@@ -79,7 +84,7 @@ export function ServiceTable({
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        onDelete(service._id?.toString() || '');
+                        onDelete(service._id?.toString() || "");
                       }}
                       title="Hapus"
                     >

@@ -29,7 +29,7 @@ export const getAllServices = async () => {
   const services = await db
     .collection(COLLECTION)
     .find()
-    .sort({ createdAt: -1 })
+    .sort({ kode: 1 })
     .toArray();
   return services;
 };

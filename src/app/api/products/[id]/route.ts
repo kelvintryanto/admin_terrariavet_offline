@@ -1,10 +1,10 @@
-import redis from '@/app/config/redis';
+import redis from "@/app/config/redis";
 import {
   deleteProduct,
   getProductById,
   updateProduct,
-} from '@/app/models/products';
-import { NextRequest, NextResponse } from 'next/server';
+} from "@/app/models/products";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
@@ -22,15 +22,15 @@ export async function GET(
     }
 
     if (!product)
-      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
     await redis.set(`product:${id}`, JSON.stringify(product));
 
     return NextResponse.json(product);
   } catch (error) {
-    console.log('Error on fetching products', error);
+    console.log("Error on fetching products", error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
@@ -45,14 +45,15 @@ export async function DELETE(
   const product = await getProductById(id);
 
   await redis.del(`product:${id}`);
+  await redis.del("products");
 
   if (!product)
-    return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
   await deleteProduct(id);
 
   return NextResponse.json(
-    { message: 'Product deleted successfully' },
+    { message: "Product deleted successfully" },
     { status: 200 }
   );
 }
@@ -66,16 +67,17 @@ export async function PUT(
   const product = await getProductById(id);
 
   if (!product)
-    return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    return NextResponse.json({ error: "Product not found" }, { status: 404 });
 
   await redis.del(`product:${id}`);
+  await redis.del("products");
 
   const body = await request.json();
 
   await updateProduct(id, body);
 
   return NextResponse.json(
-    { message: 'Product updated successfully' },
+    { message: "Product updated successfully" },
     { status: 200 }
   );
 }
