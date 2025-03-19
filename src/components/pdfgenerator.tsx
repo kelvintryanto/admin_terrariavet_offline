@@ -1,20 +1,20 @@
-'use client';
+"use client";
 
-import type { jsPDF } from 'jspdf';
-import { InvoiceData } from '../data/types';
+import type { jsPDF } from "jspdf";
+import { InvoiceData } from "../data/types";
 
 export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
   // Ensure we're in the browser
-  if (typeof window === 'undefined') {
-    throw new Error('PDF generation is only available in the browser');
+  if (typeof window === "undefined") {
+    throw new Error("PDF generation is only available in the browser");
   }
 
   return new Promise<jsPDF>(async (resolve, reject) => {
     try {
       // Dynamically import jsPDF
-      const jsPDFModule = await import('jspdf').catch((err) => {
-        console.error('Error importing jsPDF:', err);
-        throw new Error('Failed to load PDF generator');
+      const jsPDFModule = await import("jspdf").catch((err) => {
+        console.error("Error importing jsPDF:", err);
+        throw new Error("Failed to load PDF generator");
       });
 
       // Get the constructor (works with both ESM and CommonJS)
@@ -22,28 +22,28 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
         jsPDFModule.default?.jsPDF || jsPDFModule.default || jsPDFModule.jsPDF;
 
       if (!JsPDF) {
-        throw new Error('Failed to load PDF generator constructor');
+        throw new Error("Failed to load PDF generator constructor");
       }
 
       let pdf: jsPDF;
       try {
         pdf = new JsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4',
+          orientation: "portrait",
+          unit: "mm",
+          format: "a4",
         });
       } catch (error) {
-        console.error('Error creating PDF instance:', error);
-        throw new Error('Failed to initialize PDF generator');
+        console.error("Error creating PDF instance:", error);
+        throw new Error("Failed to initialize PDF generator");
       }
 
       if (!pdf) {
-        throw new Error('Failed to create PDF instance');
+        throw new Error("Failed to create PDF instance");
       }
 
       // Ensure invoice number format is correct for display
       const ensureCorrectFormat = (invoiceNo: string) => {
-        return invoiceNo.replace(/_/g, '/');
+        return invoiceNo.replace(/_/g, "/");
       };
 
       // Add error handling for PDF operations
@@ -51,7 +51,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
         try {
           operation();
         } catch (error) {
-          console.error('Error in PDF operation:', error);
+          console.error("Error in PDF operation:", error);
         }
       };
 
@@ -60,11 +60,11 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
         text: string | number | null | undefined,
         x: number,
         y: number,
-        options?: { align?: 'left' | 'center' | 'right' }
+        options?: { align?: "left" | "center" | "right" }
       ) => {
         safePdfOperation(() => {
           // Ensure text is a string and not null/undefined
-          const safeTextValue = text != null ? String(text) : '';
+          const safeTextValue = text != null ? String(text) : "";
           pdf.text(safeTextValue, x, y, options);
         });
       };
@@ -102,24 +102,24 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
 
       // Load and add logo
       const img = new Image();
-      img.crossOrigin = 'Anonymous';
+      img.crossOrigin = "Anonymous";
       img.onload = () => {
         try {
           // Add logo with error handling - move it down by 10 units
-          pdf.addImage(img, 'PNG', margin, yPos + 3, 32, 24);
+          pdf.addImage(img, "PNG", margin, yPos + 3, 32, 24);
         } catch (error) {
-          console.error('Error adding logo to PDF:', error);
+          console.error("Error adding logo to PDF:", error);
         }
         continueWithPDF();
       };
 
       img.onerror = () => {
-        console.warn('Logo image failed to load, continuing without logo');
+        console.warn("Logo image failed to load, continuing without logo");
         continueWithPDF();
       };
 
       // Try to load logo with full URL in production
-      const logoUrl = '/logo/logo_with_text.png';
+      const logoUrl = "/logo/logo_with_text.png";
 
       img.src = logoUrl;
 
@@ -128,41 +128,41 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
         pdf.setFontSize(10);
 
         // Make TerrariaVet bold
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('TerrariaVet', pageWidth - margin, yPos + 5, {
-          align: 'right',
+        pdf.setFont("helvetica", "bold");
+        pdf.text("TerrariaVet", pageWidth - margin, yPos + 5, {
+          align: "right",
         });
 
         // Switch back to normal font for remaining text
-        pdf.setFont('helvetica', 'normal');
+        pdf.setFont("helvetica", "normal");
         pdf.text(
-          'Jl.Platina 2 No.18 Desa Curug, Kec.Gunung Sindur, Parung',
+          "Jl.Platina 2 No.18 Desa Curug, Kec.Gunung Sindur, Parung",
           pageWidth - margin,
           yPos + 10,
-          { align: 'right' }
+          { align: "right" }
         );
         pdf.text(
-          'Kabupaten Bogor - Jawa Barat 16340',
+          "Kabupaten Bogor - Jawa Barat 16340",
           pageWidth - margin,
           yPos + 15,
-          { align: 'right' }
+          { align: "right" }
         );
         // Add phone numbers
         pdf.text(
-          '0811 1901 755   |   0811 800 790',
+          "0811 1901 755   |   0811 800 790",
           pageWidth - margin,
           yPos + 20,
           {
-            align: 'right',
+            align: "right",
           }
         );
         // Add bank account information (account name is required)
         pdf.text(
-          'BANK BCA : 4970343771 a.n Yudhiyanto Tasma',
+          "BANK BCA : 4970343771 a.n Yudhiyanto Tasma",
           pageWidth - margin - 1.3, // Adjust X position by moving 3mm to the left
           yPos + 25,
           {
-            align: 'right',
+            align: "right",
           }
         );
 
@@ -172,22 +172,24 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
         // Header - adjust starting position based on the new line position
         // Increased from 35 to 45 to add more space after the line
         yPos += 40; // This now means yPos + 30 (line) + 15 (space)
-        pdf.setFont('helvetica', 'bold');
+        pdf.setFont("helvetica", "bold");
         pdf.setFontSize(14);
-        pdf.text('INVOICE PERAWATAN', pageWidth / 2, yPos, { align: 'center' });
+        pdf.text("INVOICE PEMERIKSAAN", pageWidth / 2, yPos, {
+          align: "center",
+        });
 
         // Add invoice number with correct format - reduced from 5 to 4
         yPos += 5;
         pdf.setFontSize(12);
         pdf.text(ensureCorrectFormat(data.invoiceNo), pageWidth / 2, yPos, {
-          align: 'center',
+          align: "center",
         });
 
         // Client Information - reduced from 10 to 8
         yPos += 8;
         pdf.setFontSize(12);
-        pdf.text('Klien', margin, yPos);
-        pdf.setFont('helvetica', 'normal');
+        pdf.text("Klien", margin, yPos);
+        pdf.setFont("helvetica", "normal");
 
         const addField = (label: string, value: string) => {
           yPos += 8;
@@ -200,41 +202,41 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
 
           pdf.setFontSize(10);
           pdf.text(label, labelX, yPos);
-          pdf.text(':', colonX, yPos);
-          pdf.text(value || '-', valueX, yPos);
+          pdf.text(":", colonX, yPos);
+          pdf.text(value || "-", valueX, yPos);
 
           // Reduce spacing between text and line from 3 to 2
           drawLine(yPos + 2);
         };
 
-        addField('Nama', data.clientName || '-');
-        addField('Kontak', data.contact || '-');
-        addField('Nama Anjing', data.subAccount || '-');
+        addField("Nama", data.clientName || "-");
+        addField("Kontak", data.contact || "-");
+        addField("Nama Anjing", data.subAccount || "-");
 
         // Booking Information - reduced from 15 to 12
         yPos += 12;
         checkAndAddPage(20);
-        pdf.setFont('helvetica', 'bold');
+        pdf.setFont("helvetica", "bold");
         pdf.setFontSize(12);
-        pdf.text('Informasi Perawatan', margin, yPos);
-        pdf.setFont('helvetica', 'normal');
+        pdf.text("Informasi Perawatan", margin, yPos);
+        pdf.setFont("helvetica", "normal");
 
         addField(
-          'Tanggal Masuk',
-          `${data.inpatientDate} ${data.inpatientTime}` || '-'
+          "Tanggal Masuk",
+          `${data.inpatientDate} ${data.inpatientTime}` || "-"
         );
-        if (data.type === 'inpatient') {
+        if (data.type === "inpatient") {
           addField(
-            'Tanggal Keluar',
-            `${data.dischargeDate} ${data.dischargeTime}` || '-'
+            "Tanggal Keluar",
+            `${data.dischargeDate} ${data.dischargeTime}` || "-"
           );
         }
-        addField('Total', `Rp ${data.total.toLocaleString()}`);
-        if (data.type === 'inpatient') {
-          addField('Deposit', `Rp ${data.deposit.toLocaleString()}`);
-          addField('Sisa', `Rp ${data.balance.toLocaleString()}`);
+        addField("Total", `Rp ${data.total.toLocaleString()}`);
+        if (data.type === "inpatient") {
+          addField("Deposit", `Rp ${data.deposit.toLocaleString()}`);
+          addField("Sisa", `Rp ${data.balance.toLocaleString()}`);
         }
-        addField('Status', data.status);
+        addField("Status", data.status);
 
         // Services - reduced from 25 to 15
         yPos += 15;
@@ -242,15 +244,15 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
 
         // Check if services array is empty, only add headers and section if data exists
         if (data.services && data.services.length > 0) {
-          pdf.setFont('helvetica', 'bold');
+          pdf.setFont("helvetica", "bold");
           pdf.setFontSize(10); // Reduced from 12
-          pdf.text('Servis', margin, yPos);
-          pdf.setFont('helvetica', 'normal');
+          pdf.text("Servis", margin, yPos);
+          pdf.setFont("helvetica", "normal");
 
           // Services table - more compact spacing
           yPos += 6; // Reduced from 8
 
-          const serviceHeaders = ['Nama', 'Tanggal', 'Harga'];
+          const serviceHeaders = ["Nama", "Tanggal", "Harga"];
           // Calculate total available width and distribute it evenly for 3 columns
           const availableWidth = pageWidth - 2 * margin;
           const serviceColWidths = [
@@ -268,7 +270,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
           yPos += 3; // Reduced from 4 to bring headers closer to the line
 
           // Use normal font with slightly larger size instead of bold for a semi-bold effect
-          pdf.setFont('helvetica', 'normal');
+          pdf.setFont("helvetica", "normal");
           // Set consistent font size 8 for headers (reduced from 10)
           pdf.setFontSize(8);
 
@@ -278,13 +280,13 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
 
           posX += serviceColWidths[0];
           pdf.text(serviceHeaders[1], posX + serviceColWidths[1] / 2, yPos, {
-            align: 'center',
+            align: "center",
           }); // Center align middle column
 
           posX += serviceColWidths[1];
           // Right align last column - align with the end of the line
           pdf.text(serviceHeaders[2], pageWidth - margin, yPos, {
-            align: 'right',
+            align: "right",
           });
 
           // Keep font size at 8 for content (reduced from 10)
@@ -324,14 +326,14 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
 
             // Date centered
             const formattedDate = new Date(service.date).toLocaleDateString(
-              'id-ID',
+              "id-ID",
               {
-                day: '2-digit',
-                month: 'short',
+                day: "2-digit",
+                month: "short",
               }
             );
             pdf.text(formattedDate, itemX + serviceColWidths[1] / 2, yPos, {
-              align: 'center',
+              align: "center",
             });
 
             // Price right aligned - align with the end of the line
@@ -339,7 +341,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
               `Rp ${service.price.toLocaleString()}`,
               pageWidth - margin,
               yPos,
-              { align: 'right' }
+              { align: "right" }
             );
 
             // Consistent spacing after text and before line
@@ -355,15 +357,15 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
 
         // Check if cart items array is empty, only add headers and section if data exists
         if (data.cartItems && data.cartItems.length > 0) {
-          pdf.setFont('helvetica', 'bold');
+          pdf.setFont("helvetica", "bold");
           pdf.setFontSize(10); // Reduced from 12
-          pdf.text('Keranjang Pasien', margin, yPos);
-          pdf.setFont('helvetica', 'normal');
+          pdf.text("Keranjang Pasien", margin, yPos);
+          pdf.setFont("helvetica", "normal");
 
           // Cart Items section with more compact spacing
           yPos += 6; // Reduced from 8
 
-          const headers = ['Nama', 'Tanggal', 'Harga', 'Kuantitas', 'Total'];
+          const headers = ["Nama", "Tanggal", "Harga", "Kuantitas", "Total"];
           // Distribute cart columns width evenly for 5 columns
           const availableWidth = pageWidth - 2 * margin;
           const colWidths = [
@@ -383,7 +385,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
           yPos += 3; // Reduced from 4 to bring headers closer to the line
 
           // Use normal font with slightly larger size instead of bold for a semi-bold effect
-          pdf.setFont('helvetica', 'normal');
+          pdf.setFont("helvetica", "normal");
           // Set consistent font size 8 for headers (reduced from 10)
           pdf.setFontSize(8);
 
@@ -393,22 +395,22 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
 
           posX += colWidths[0];
           pdf.text(headers[1], posX + colWidths[1] / 2, yPos, {
-            align: 'center',
+            align: "center",
           }); // Center align date
 
           posX += colWidths[1];
           pdf.text(headers[2], posX + colWidths[2] / 2, yPos, {
-            align: 'center',
+            align: "center",
           }); // Center align price
 
           posX += colWidths[2];
           pdf.text(headers[3], posX + colWidths[3] / 2, yPos, {
-            align: 'center',
+            align: "center",
           }); // Center align quantity
 
           // Right align total column - align with the end of the line
           pdf.text(headers[4], pageWidth - margin, yPos, {
-            align: 'right',
+            align: "right",
           });
 
           // Keep font size at 8 for content (reduced from 10)
@@ -448,14 +450,14 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
 
             // Date centered
             const formattedDate = new Date(item.date).toLocaleDateString(
-              'id-ID',
+              "id-ID",
               {
-                day: '2-digit',
-                month: 'short',
+                day: "2-digit",
+                month: "short",
               }
             );
             pdf.text(formattedDate, itemX + colWidths[1] / 2, yPos, {
-              align: 'center',
+              align: "center",
             });
 
             // Move to price column position
@@ -467,7 +469,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
               itemX + colWidths[2] / 2,
               yPos,
               {
-                align: 'center',
+                align: "center",
               }
             );
 
@@ -476,7 +478,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
 
             // Quantity centered
             pdf.text(item.quantity.toString(), itemX + colWidths[3] / 2, yPos, {
-              align: 'center',
+              align: "center",
             });
 
             // Total right aligned - align with the end of the line
@@ -485,7 +487,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
               pageWidth - margin,
               yPos,
               {
-                align: 'right',
+                align: "right",
               }
             );
 
@@ -507,10 +509,10 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
           yPos += 15;
         }
 
-        pdf.setFont('helvetica', 'bold');
+        pdf.setFont("helvetica", "bold");
         pdf.setFontSize(10); // Reduced from 12
-        pdf.text('Rincian Biaya', pageWidth - margin - 80, yPos);
-        pdf.setFont('helvetica', 'normal');
+        pdf.text("Rincian Biaya", pageWidth - margin - 80, yPos);
+        pdf.setFont("helvetica", "normal");
 
         // Reduced from 8 to 6
         const lineHeight = 6;
@@ -524,7 +526,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
         ) => {
           if (isTotal) {
             yPos += lineHeight;
-            pdf.setFont('helvetica', 'bold');
+            pdf.setFont("helvetica", "bold");
             // Reduce spacing between text and line
             safeLine(breakdownLeft, yPos - 2, pageWidth - margin, yPos - 2); // Reduced from -3
           }
@@ -533,33 +535,33 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
           safeText(label, breakdownLeft, yPos);
 
           const valueText =
-            typeof value === 'number' ? `Rp ${value.toLocaleString()}` : value;
+            typeof value === "number" ? `Rp ${value.toLocaleString()}` : value;
 
           safeText(valueText, pageWidth - margin, yPos, {
-            align: 'right',
+            align: "right",
           });
           if (isTotal) {
-            pdf.setFont('helvetica', 'normal');
+            pdf.setFont("helvetica", "normal");
             yPos += lineHeight / 2;
           }
         };
 
         // Add payment method information
         addBreakdownLine(
-          'Metode Pembayaran',
-          data.paymentMethod === 'Other' && data.customPaymentMethod
+          "Metode Pembayaran",
+          data.paymentMethod === "Other" && data.customPaymentMethod
             ? data.customPaymentMethod
             : data.paymentMethod
         );
 
         // Add breakdown items
-        addBreakdownLine('Subtotal', data.subtotal);
+        addBreakdownLine("Subtotal", data.subtotal);
         const taxAmount = (data.subtotal * (data.tax || 0)) / 100;
         addBreakdownLine(`Pajak (${data.tax || 0}%)`, taxAmount);
-        addBreakdownLine('Total', data.total, true);
+        addBreakdownLine("Total", data.total, true);
 
-        if (data.type === 'inpatient') {
-          addBreakdownLine('Deposit', data.deposit);
+        if (data.type === "inpatient") {
+          addBreakdownLine("Deposit", data.deposit);
           // Removed the "Sisa" line for both inpatient and outpatient
         }
 
@@ -569,7 +571,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
             pdf.setPage(i);
             pdf.setFontSize(8); // Reduced from 10
             safeText(String(i), pageWidth - 10, pageHeight - 10, {
-              align: 'right',
+              align: "right",
             });
           });
         }
@@ -578,9 +580,9 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
         const originalSave = pdf.save;
         pdf.save = function (filename: string) {
           try {
-            const blob = this.output('blob');
+            const blob = this.output("blob");
             const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
+            const link = document.createElement("a");
             link.href = url;
             link.download = filename;
             document.body.appendChild(link);
@@ -588,7 +590,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
           } catch (error) {
-            console.error('Error in PDF save:', error);
+            console.error("Error in PDF save:", error);
             originalSave.call(this, filename);
           }
         };
@@ -596,7 +598,7 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
         resolve(pdf);
       }
     } catch (error) {
-      console.error('Error in PDF generation:', error);
+      console.error("Error in PDF generation:", error);
       reject(error);
     }
   });
