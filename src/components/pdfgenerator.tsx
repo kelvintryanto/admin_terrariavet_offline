@@ -57,13 +57,15 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
 
       // Wrap text operations with error handling
       const safeText = (
-        text: string,
+        text: string | number | null | undefined,
         x: number,
         y: number,
         options?: { align?: 'left' | 'center' | 'right' }
       ) => {
         safePdfOperation(() => {
-          pdf.text(text, x, y, options);
+          // Ensure text is a string and not null/undefined
+          const safeTextValue = text != null ? String(text) : '';
+          pdf.text(safeTextValue, x, y, options);
         });
       };
 
@@ -524,16 +526,16 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
             yPos += lineHeight;
             pdf.setFont('helvetica', 'bold');
             // Reduce spacing between text and line
-            pdf.line(breakdownLeft, yPos - 2, pageWidth - margin, yPos - 2); // Reduced from -3
+            safeLine(breakdownLeft, yPos - 2, pageWidth - margin, yPos - 2); // Reduced from -3
           }
           yPos += lineHeight;
           pdf.setFontSize(8); // Reduced from 10
-          pdf.text(label, breakdownLeft, yPos);
+          safeText(label, breakdownLeft, yPos);
 
           const valueText =
             typeof value === 'number' ? `Rp ${value.toLocaleString()}` : value;
 
-          pdf.text(valueText, pageWidth - margin, yPos, {
+          safeText(valueText, pageWidth - margin, yPos, {
             align: 'right',
           });
           if (isTotal) {
