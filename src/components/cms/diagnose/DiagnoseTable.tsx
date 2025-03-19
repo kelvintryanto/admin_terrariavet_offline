@@ -120,16 +120,17 @@ export default function DiagnoseTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Diagnose No</TableHead>
-            <TableHead>Client Name</TableHead>
-            <TableHead>Pet Name</TableHead>
-            <TableHead>Doctor Name</TableHead>
-            <TableHead>Date</TableHead>
+            <TableHead className="text-center">No</TableHead>
+            <TableHead>Nomor Diagnosa</TableHead>
+            <TableHead>Nama Klien</TableHead>
+            <TableHead>Nama Anjing</TableHead>
+            <TableHead>Nama Dokter</TableHead>
+            <TableHead>Tanggal</TableHead>
             <TableHead className="text-center">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {filteredDiagnoses.map((diagnose) => {
+          {filteredDiagnoses.map((diagnose, index) => {
             if (!diagnose._id) return null;
             return (
               <TableRow
@@ -137,6 +138,7 @@ export default function DiagnoseTable({
                 onClick={() => handleDiagnoseClick(diagnose._id.toString())}
                 className="cursor-pointer"
               >
+                <TableCell className="text-center">{index + 1}</TableCell>
                 <TableCell>{diagnose.dxNumber}</TableCell>
                 <TableCell>{diagnose.clientSnapShot?.name}</TableCell>
                 <TableCell>{diagnose.dogSnapShot?.name}</TableCell>
