@@ -1,23 +1,21 @@
-import { getUserFromRequest } from '@/app/api/auth/server-auth';
-import { canAccessCMS } from '@/app/utils/server-auth-utils';
-import type { NextRequest } from 'next/server';
-import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
+import { verify } from './app/utils/jwt';
 
 export async function middleware(request: NextRequest) {
   try {
-    const user = await getUserFromRequest();
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
+
+    const user = await verify(token);
 
     // No user found, redirect to login
     if (!user) {
       return NextResponse.redirect(new URL('/login', request.url));
-    }
-
-    // Check if user has CMS access
-    const hasAccess = canAccessCMS(user.role);
-
-    // If no access, redirect to home
-    if (!hasAccess) {
-      return NextResponse.redirect(new URL('/', request.url));
     }
 
     const response = NextResponse.next();
