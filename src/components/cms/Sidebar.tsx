@@ -176,7 +176,7 @@ const SidebarCMS = () => {
                       [@media(max-width:1090px)]:hidden [@media(max-width:1090px)]:group-hover:inline-block
                       [@media(min-width:1091px)]:inline-block"
                     >
-                      Reset Password
+                      Change Password
                     </span>
                   </Link>
                 </TooltipTrigger>
@@ -184,7 +184,7 @@ const SidebarCMS = () => {
                   side="right"
                   className="lg:hidden bg-black/80 text-white"
                 >
-                  Reset Password
+                  Change Password
                 </TooltipContent>
               </Tooltip>
             </SidebarMenuItem>
