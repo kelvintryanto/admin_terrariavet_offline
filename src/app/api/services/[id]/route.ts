@@ -1,10 +1,10 @@
-import redis from '@/app/config/redis';
+import redis from "@/app/config/redis";
 import {
   deleteService,
   getServiceById,
   updateService,
-} from '@/app/models/services';
-import { NextRequest, NextResponse } from 'next/server';
+} from "@/app/models/services";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(
   request: NextRequest,
@@ -21,13 +21,13 @@ export async function GET(
     }
 
     if (!service)
-      return NextResponse.json({ error: 'Service not found' }, { status: 404 });
+      return NextResponse.json({ error: "Service not found" }, { status: 404 });
 
     return NextResponse.json(service);
   } catch (error) {
-    console.log('Error on fetching service', error);
+    console.log("Error on fetching service", error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
@@ -42,13 +42,14 @@ export async function PUT(
     const body = await request.json();
 
     await redis.del(`service:${id}`);
+    await redis.del("services");
 
     const result = await updateService(id, body);
     return NextResponse.json(result);
   } catch (error) {
-    console.log('Error on updating service', error);
+    console.log("Error on updating service", error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
@@ -63,12 +64,13 @@ export async function DELETE(
     const result = await deleteService(id);
 
     await redis.del(`service:${id}`);
+    await redis.del("services");
 
     return NextResponse.json(result);
   } catch (error) {
-    console.log('Error on deleting service', error);
+    console.log("Error on deleting service", error);
     return NextResponse.json(
-      { error: 'Internal Server Error' },
+      { error: "Internal Server Error" },
       { status: 500 }
     );
   }
