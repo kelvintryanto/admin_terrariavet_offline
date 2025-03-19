@@ -111,7 +111,6 @@ const ReCaptcha = ({
       return;
 
     const siteKey = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY;
-    console.log("ini sitekey bos", siteKey);
     if (!siteKey) {
       console.error("RECAPTCHA_SITE_KEY is not defined");
       setLoadError("reCAPTCHA site key is missing");
