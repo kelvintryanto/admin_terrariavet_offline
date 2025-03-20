@@ -241,10 +241,6 @@ export default function InvoiceDetailPage() {
                 </p>
               </div>
             )}
-            <div>
-              <p className="text-sm text-muted-foreground">Lokasi</p>
-              <p className="font-medium">{invoice.location}</p>
-            </div>
           </CardContent>
         </Card>
 

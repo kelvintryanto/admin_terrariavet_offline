@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb';
+import { ObjectId } from "mongodb";
 
 export interface Service {
   _id?: string;
@@ -45,23 +45,22 @@ export interface InvoiceData {
   inpatientTime: string;
   dischargeDate?: string;
   dischargeTime?: string;
-  location: string;
   total: number;
   deposit: number;
   balance: number;
-  status: 'Dirawat Inap' | 'Rawat Jalan';
+  status: "Dirawat Inap" | "Rawat Jalan";
   services: ServiceItem[];
   cartItems: CartItem[];
   tax: number;
   subtotal: number;
-  type: 'inpatient' | 'outpatient';
+  type: "inpatient" | "outpatient";
   paymentMethod:
-    | 'Cash'
-    | 'Transfer'
-    | 'Kartu Kredit'
-    | 'Qris'
-    | 'Gopay'
-    | 'Other';
+    | "Cash"
+    | "Transfer"
+    | "Kartu Kredit"
+    | "Qris"
+    | "Gopay"
+    | "Other";
   customPaymentMethod?: string;
 }
 
@@ -80,7 +79,7 @@ export interface DogSnapShotData {
   birthMonth: string;
   color: string;
   weight: number;
-  sex: 'male' | 'female';
+  sex: "male" | "female";
   lastVaccineDate?: string;
   lastDewormDate?: string;
 }
