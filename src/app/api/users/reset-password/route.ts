@@ -1,7 +1,7 @@
 import {
-  resetCustomerPassword,
-  verifyCustomerCurrentPassword,
-} from '@/app/models/customer';
+  resetUserPassword,
+  verifyUserCurrentPassword,
+} from '@/app/models/user';
 import { verify } from '@/app/utils/jwt';
 import { cookies } from 'next/headers';
 import { NextRequest } from 'next/server';
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     if (user.googleUser === true) {
       console.log('Google user setting a password for the first time');
       try {
-        await resetCustomerPassword(user.id, newPassword);
+        await resetUserPassword(user.id, newPassword);
         return Response.json({
           message: 'Password berhasil disimpan',
         });
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      const isValidPassword = await verifyCustomerCurrentPassword(
+      const isValidPassword = await verifyUserCurrentPassword(
         user.id,
         currentPassword
       );
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      await resetCustomerPassword(user.id, newPassword);
+      await resetUserPassword(user.id, newPassword);
       return Response.json({
         message: 'Password berhasil diubah',
       });

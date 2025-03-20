@@ -1,8 +1,16 @@
 'use client';
 
+import { Category } from '@/app/models/category';
 import { Product } from '@/app/models/products';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
@@ -40,6 +48,7 @@ export default function EditProductPage({
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [product, setProduct] = useState<Product | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -61,6 +70,26 @@ export default function EditProductPage({
 
     fetchProduct();
   }, [id]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch('/api/categories');
+        const data = await response.json();
+        // Filter only product categories
+        setCategories(data.filter((cat: Category) => cat.type === 'product'));
+      } catch (error) {
+        console.error('Error on fetching categories', error);
+        toast({
+          title: 'Error',
+          description: 'Gagal mengambil data kategori',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -92,7 +121,7 @@ export default function EditProductPage({
         description: 'Produk berhasil diperbarui',
       });
 
-      router.push('/products');
+      router.push('/products?tab=products');
     } catch {
       toast({
         title: 'Error',
@@ -139,13 +168,21 @@ export default function EditProductPage({
 
           <div>
             <label className="block text-sm font-medium mb-1">Kategori</label>
-            <Input
-              type="text"
-              name="category"
-              defaultValue={product.category}
-              required
-              className="w-full"
-            />
+            <Select name="category" defaultValue={product.category} required>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Pilih kategori produk" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem
+                    key={category._id.toString()}
+                    value={category.name}
+                  >
+                    {category.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>

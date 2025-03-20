@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -81,7 +82,7 @@ export function ChangePasswordDialog() {
     }
   };
 
-  const togglePasswordVisibility = (field: keyof typeof showPasswords) => {
+  const togglePasswordVisibility = (field: 'current' | 'new' | 'confirm') => {
     setShowPasswords((prev) => ({
       ...prev,
       [field]: !prev[field],
@@ -111,32 +112,32 @@ export function ChangePasswordDialog() {
         }}
       >
         <DialogTrigger asChild>
-          <Button
-            variant="outline"
-            className="gap-2 w-full text-xs h-8 sm:h-9 whitespace-nowrap"
-          >
-            <KeyRound size={14} className="sm:w-4 sm:h-4" />
-            Ubah Sandi
-          </Button>
+          <button className="w-full flex items-center gap-2 p-2 rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+            <KeyRound className="h-4 w-4 flex-shrink-0" />
+            <span className="hidden lg:inline-block">Ubah Kata Sandi</span>
+          </button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-md bg-gradient-to-br from-violet-900/90 via-violet-800/90 to-violet-900/90 border-violet-500/20">
+        <DialogContent className="sm:max-w-md border bg-background">
           <DialogHeader>
-            <DialogTitle className="text-xl font-semibold text-white">
-              Ubah Sandi
+            <DialogTitle className="text-lg font-semibold">
+              Ubah Kata Sandi
             </DialogTitle>
+            <DialogDescription>
+              Masukkan kata sandi saat ini dan kata sandi baru Anda.
+            </DialogDescription>
           </DialogHeader>
 
           {error && (
             <Alert
               variant="destructive"
-              className="bg-red-500/10 border-red-500/20 text-red-200"
+              className="border-destructive/50 text-destructive"
             >
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
           {success && (
-            <Alert className="bg-green-500/10 border-green-500/20 text-green-200">
+            <Alert className="border-green-500/50 text-green-600 bg-green-50/50">
               <AlertDescription>{success}</AlertDescription>
             </Alert>
           )}
@@ -154,13 +155,13 @@ export function ChangePasswordDialog() {
                       currentPassword: e.target.value,
                     }))
                   }
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/50"
+                  className="border-input bg-background"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility('current')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
                   {showPasswords.current ? (
                     <EyeOff size={16} />
@@ -183,13 +184,13 @@ export function ChangePasswordDialog() {
                       newPassword: e.target.value,
                     }))
                   }
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/50"
+                  className="border-input bg-background"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility('new')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
                   {showPasswords.new ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
@@ -208,13 +209,13 @@ export function ChangePasswordDialog() {
                       confirmPassword: e.target.value,
                     }))
                   }
-                  className="bg-white/5 border-white/10 text-white placeholder:text-white/50"
+                  className="border-input bg-background"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => togglePasswordVisibility('confirm')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/80"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
                   {showPasswords.confirm ? (
                     <EyeOff size={16} />
@@ -229,7 +230,7 @@ export function ChangePasswordDialog() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="bg-orange-500 hover:bg-orange-600 text-white"
+                className="bg-black hover:bg-black/80 text-white"
               >
                 {isLoading ? 'Mengubah...' : 'Ubah Kata Sandi'}
               </Button>
