@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   BookUser,
@@ -24,55 +24,55 @@ import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
-} from '../ui/sidebar';
+} from "../ui/sidebar";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '../ui/tooltip';
+} from "../ui/tooltip";
 
 const baseItems = [
   {
-    title: 'Dashboard',
-    url: '',
+    title: "Dashboard",
+    url: "",
     icon: LayoutDashboard,
   },
 ];
 
 const adminItems = [
   {
-    title: 'Admin',
-    url: '/admin',
+    title: "Admin",
+    url: "/admin",
     icon: Shield,
-    requiredRole: 'super_admin',
+    requiredRole: "super_admin",
   },
 ];
 
 const customerItems = [
   {
-    title: 'Pelanggan',
-    url: '/customer',
+    title: "Pelanggan",
+    url: "/customer",
     icon: BookUser,
   },
   {
-    title: 'Kategori',
-    url: '/category',
+    title: "Kategori",
+    url: "/category",
     icon: Layers2,
   },
   {
-    title: 'Produk & Layanan',
-    url: '/products',
+    title: "Produk & Layanan",
+    url: "/products",
     icon: Boxes,
   },
   {
-    title: 'Diagnosa',
-    url: '/diagnose',
+    title: "Diagnosa",
+    url: "/diagnose",
     icon: Stethoscope,
   },
   {
-    title: 'Invoice',
-    url: '/invoice',
+    title: "Invoice",
+    url: "/invoice",
     icon: HandCoins,
   },
 ];
@@ -84,18 +84,18 @@ const SidebarCMS = () => {
   useEffect(() => {
     const fetchUserRole = async () => {
       try {
-        const response = await fetch('/api/users/me');
+        const response = await fetch("/api/users/me");
         const data = await response.json();
         if (data.user) {
           // Add admin items if user is super_admin
-          if (data.user.role === 'super_admin') {
+          if (data.user.role === "super_admin") {
             setItems([...baseItems, ...adminItems, ...customerItems]);
           } else {
             setItems([...baseItems, ...customerItems]);
           }
         }
       } catch (error) {
-        console.error('Error fetching user role:', error);
+        console.error("Error fetching user role:", error);
       }
     };
     fetchUserRole();
@@ -103,13 +103,13 @@ const SidebarCMS = () => {
 
   const handleLogout = async () => {
     try {
-      await fetch('/api/users/logout', {
-        method: 'POST',
+      await fetch("/api/users/logout", {
+        method: "POST",
       });
-      router.push('/');
+      router.push("/");
       router.refresh();
     } catch (error) {
-      console.error('Failed to logout:', error);
+      console.error("Failed to logout:", error);
     }
   };
 
@@ -138,7 +138,7 @@ const SidebarCMS = () => {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <a
-                          href={`${item.url === '' ? '/dashboard' : item.url}`}
+                          href={`${item.url === "" ? "/dashboard" : item.url}`}
                           className="flex items-center gap-2 p-2 rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                         >
                           <item.icon className="h-4 w-4" />
@@ -161,7 +161,7 @@ const SidebarCMS = () => {
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter className="absolute bottom-0 left-0 right-0 border-t">
+        <SidebarFooter className="absolute bottom-0 left-0 right-0 border-t text-sm">
           <SidebarMenu>
             <SidebarMenuItem>
               <Tooltip>
