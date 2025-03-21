@@ -1,6 +1,6 @@
 import { Db, ObjectId } from 'mongodb';
 import { connectToDatabase } from '../config/config';
-import { hashPass } from '../utils/bcrypt';
+import { comparePass, hashPass } from '../utils/bcrypt';
 
 const DATABASE_NAME = 'terrariavet';
 const COLLECTION = 'users';
@@ -96,4 +96,87 @@ export const updatePassword = async (userId: string, newPassword: string) => {
   }
 
   return result;
+};
+
+export const verifyUserCurrentPassword = async (
+  id: string,
+  currentPassword: string
+) => {
+  try {
+    const db = await getDb();
+    console.log(`Attempting to verify password for user ID: ${id}`);
+
+    // Get user by ID
+    let user;
+    try {
+      user = await db.collection(COLLECTION).findOne({
+        _id: ObjectId.createFromHexString(id),
+      });
+    } catch (error) {
+      console.error(`Error finding user with ID ${id}:`, error);
+      return false;
+    }
+
+    if (!user) {
+      console.error(`User not found with ID: ${id}`);
+      return false;
+    }
+
+    // Check if the user is a Google user and doesn't have a password
+    if (user.googleUser && !user.password) {
+      console.log('Google user without password cannot change password');
+      return false;
+    }
+
+    // For Google users, allow password change without current password verification
+    if (user.googleUser === true) {
+      console.log(
+        'Google user attempting to set a password, bypassing verification'
+      );
+      return true;
+    }
+
+    // Verify password
+    const isValid = await comparePass(currentPassword, user.password || '');
+    console.log(`Password verification result: ${isValid}`);
+    return isValid;
+  } catch (error) {
+    console.error('Error in verifyUserCurrentPassword:', error);
+    return false;
+  }
+};
+
+export const resetUserPassword = async (id: string, newPassword: string) => {
+  try {
+    const db = await getDb();
+    console.log(`Attempting to reset password for user ID: ${id}`);
+
+    const hashedPassword = await hashPass(newPassword);
+
+    const result = await db.collection(COLLECTION).updateOne(
+      { _id: ObjectId.createFromHexString(id) },
+      {
+        $set: {
+          password: hashedPassword,
+          updatedAt: new Date().toISOString(),
+        },
+      }
+    );
+
+    if (result.matchedCount === 0) {
+      console.error(`No user found for ID: ${id}`);
+      throw new Error(`User not found for ID: ${id}`);
+    }
+
+    if (result.modifiedCount === 0) {
+      console.warn(`Password not modified for user ID: ${id}`);
+    } else {
+      console.log(`Password successfully reset for user ID: ${id}`);
+    }
+
+    return result;
+  } catch (error) {
+    console.error('Error in resetUserPassword:', error);
+    throw error;
+  }
 };

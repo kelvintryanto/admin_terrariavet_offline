@@ -368,18 +368,34 @@ export default function AdminPage() {
 
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl sm:text-2xl font-bold">Manajemen Admin</h1>
-        <Link href="/admin/add">
-          <Button>Tambah Admin</Button>
-        </Link>
       </div>
 
-      <div className="mb-6">
-        <Input
-          placeholder="Cari admin..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-sm"
-        />
+      <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between mb-6">
+        <div className="relative w-full sm:w-64">
+          <Input
+            placeholder="Cari admin..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+          <svg
+            className="w-5 h-5 absolute left-3 top-2.5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
+          </svg>
+        </div>
+        <Button asChild className="flex-1 sm:flex-none">
+          <Link href="/admin/add">Tambah Admin</Link>
+        </Button>
       </div>
 
       <div className="hidden md:block rounded-md border">

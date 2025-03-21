@@ -57,7 +57,7 @@ export default function ServiceDetailPage() {
           <Button
             variant="outline"
             size="icon"
-            onClick={() => router.push('/products')}
+            onClick={() => router.push('/products?tab=services')}
             className="h-8 w-8 sm:h-10 sm:w-10"
           >
             <ArrowLeft className="h-4 w-4" />

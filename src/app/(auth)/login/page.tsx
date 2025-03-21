@@ -2,6 +2,7 @@
 
 import ReCaptcha from '@/components/ReCaptcha';
 import { motion } from 'framer-motion';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useActionState, useEffect, useState, useTransition } from 'react';
 import { loginAction } from './action';
@@ -77,11 +78,14 @@ const Login = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch('/api/users/me');
-        const data = await response.json();
+        // Simple cookie check instead of making an API call that will 401
+        const cookies = document.cookie.split(';');
+        const tokenCookie = cookies.find((cookie) =>
+          cookie.trim().startsWith('token=')
+        );
 
-        if (data.user) {
-          // User is already logged in, redirect to dashboard
+        if (tokenCookie) {
+          // If token cookie exists, try to redirect to dashboard
           router.push('/dashboard');
         }
       } catch (error) {
@@ -264,6 +268,29 @@ const Login = () => {
                   </div>
                 </motion.div>
 
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <input
+                      id="remember-me"
+                      name="remember-me"
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-400"
+                    />
+                    <label
+                      htmlFor="remember-me"
+                      className="ml-2 block text-sm text-white"
+                    >
+                      Ingat saya
+                    </label>
+                  </div>
+                  <Link
+                    href="/forgot-password"
+                    className="text-sm text-orange-300 hover:text-orange-400 cursor-pointer"
+                  >
+                    Lupa Password?
+                  </Link>
+                </div>
+
                 {showRecaptcha && (
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
@@ -289,21 +316,6 @@ const Login = () => {
                     </div>
                   </motion.div>
                 )}
-
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-gray-300 text-orange-500 focus:ring-orange-400"
-                  />
-                  <label
-                    htmlFor="remember-me"
-                    className="ml-2 block text-sm text-white"
-                  >
-                    Ingat saya
-                  </label>
-                </div>
 
                 <div>
                   <motion.button

@@ -68,7 +68,7 @@ export default function AddServicePage() {
         description: 'Layanan berhasil ditambahkan',
       });
 
-      router.push('/products');
+      router.push('/products?tab=services');
     } catch {
       toast({
         title: 'Error',
@@ -138,7 +138,7 @@ export default function AddServicePage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push('/products')}
+              onClick={() => router.push('/products?tab=services')}
             >
               Batal
             </Button>

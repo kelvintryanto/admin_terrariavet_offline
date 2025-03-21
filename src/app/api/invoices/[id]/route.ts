@@ -4,11 +4,8 @@ import {
   getInvoiceById,
   updateInvoice,
 } from '@/app/models/invoice';
-import {
-  // canDeleteInvoice,
-  canEditInvoice,
-} from '@/app/utils/auth';
-import { canDeleteInvoice } from '@/app/utils/authCheck';
+import {} from '@/app/utils/auth';
+import { canDeleteInvoice, canEditInvoice } from '@/app/utils/authCheck';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(

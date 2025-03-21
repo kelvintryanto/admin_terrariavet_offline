@@ -46,9 +46,16 @@ export const updateInvoice = async (id: string, data: Partial<InvoiceData>) => {
   const db = await getDb();
 
   const wibDate = getWIBDate();
+
+  // Create clean data for update by spreading the data and removing _id field
+  const dataForUpdate = { ...data };
+  if ('_id' in dataForUpdate) {
+    delete dataForUpdate._id;
+  }
+
   const update = {
     $set: {
-      ...data,
+      ...dataForUpdate,
       updatedAt: wibDate.toISOString(),
     },
   };
@@ -61,7 +68,12 @@ export const updateInvoice = async (id: string, data: Partial<InvoiceData>) => {
     throw new Error('Invoice not found');
   }
 
-  return result;
+  // Fetch and return the updated invoice
+  const updatedInvoice = await db.collection(COLLECTION).findOne({
+    _id: ObjectId.createFromHexString(id),
+  });
+
+  return updatedInvoice;
 };
 
 export const deleteInvoice = async (id: string) => {
