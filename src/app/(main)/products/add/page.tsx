@@ -70,7 +70,7 @@ export default function AddProductPage() {
         description: 'Produk berhasil ditambahkan',
       });
 
-      router.push('/products');
+      router.push('/products?tab=products');
     } catch {
       toast({
         title: 'Error',
@@ -143,7 +143,7 @@ export default function AddProductPage() {
             <Button
               type="button"
               variant="outline"
-              onClick={() => router.push('/products')}
+              onClick={() => router.push('/products?tab=products')}
             >
               Batal
             </Button>

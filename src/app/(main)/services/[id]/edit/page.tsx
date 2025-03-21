@@ -26,6 +26,7 @@ import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 
 const formSchema = z.object({
+  kode: z.string().min(1, 'Kode layanan harus diisi'),
   name: z.string().min(1, 'Nama layanan harus diisi'),
   basePrice: z.coerce
     .number()
@@ -42,6 +43,7 @@ export default function ServiceEditPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      kode: '',
       name: '',
       basePrice: 0,
       description: '',
@@ -55,6 +57,7 @@ export default function ServiceEditPage() {
         if (!response.ok) throw new Error('Failed to fetch service');
         const data = await response.json();
         form.reset({
+          kode: data.kode,
           name: data.name,
           basePrice: data.basePrice,
           description: data.description || '',
@@ -89,7 +92,7 @@ export default function ServiceEditPage() {
         description: 'Layanan berhasil diperbarui',
       });
 
-      router.push('/products');
+      router.push('/products?tab=services');
     } catch (error) {
       console.error('Error updating service:', error);
       toast({
@@ -112,6 +115,20 @@ export default function ServiceEditPage() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="kode"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Kode Layanan</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
               <FormField
                 control={form.control}
                 name="name"

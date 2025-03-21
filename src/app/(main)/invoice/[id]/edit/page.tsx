@@ -2,10 +2,12 @@
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { InvoiceData } from '@/data/types';
+import { toast } from '@/hooks/use-toast';
 import { ArrowLeft } from 'lucide-react';
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 const InvoiceForm = dynamic(() => import('@/components/invoice-form'), {
   ssr: false,
@@ -19,9 +21,70 @@ const InvoiceForm = dynamic(() => import('@/components/invoice-form'), {
   ),
 });
 
-export default function Page() {
+export default function EditInvoicePage() {
   const router = useRouter();
+  const params = useParams();
+  const invoiceId = params.id as string;
+  const [invoice, setInvoice] = useState<InvoiceData | null>(null);
+  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>('inpatient');
+
+  useEffect(() => {
+    const fetchInvoice = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/invoices/${invoiceId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch invoice');
+        }
+        const data = await response.json();
+        setInvoice(data);
+        setActiveTab(data.type || 'inpatient');
+      } catch (error) {
+        console.error('Error fetching invoice:', error);
+        toast({
+          title: 'Error',
+          description: 'Gagal mengambil data invoice',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (invoiceId) {
+      fetchInvoice();
+    }
+  }, [invoiceId]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold">Loading...</h2>
+          <p className="text-muted-foreground">Memuat data invoice...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!invoice) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-lg font-semibold">Error</h2>
+          <p className="text-muted-foreground">Invoice tidak ditemukan</p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => router.push('/invoice')}
+          >
+            Kembali ke Halaman Invoice
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full overflow-x-hidden bg-background">
@@ -38,10 +101,10 @@ export default function Page() {
             </Button>
             <div>
               <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold truncate">
-                Invoice Pemeriksaan
+                Edit Invoice
               </h1>
               <p className="text-xs text-muted-foreground truncate">
-                Pilih jenis perawatan dan isi formulir
+                Edit data invoice {invoice.invoiceNo}
               </p>
             </div>
           </div>
@@ -62,12 +125,14 @@ export default function Page() {
               <TabsTrigger
                 value="inpatient"
                 className="text-xs sm:text-sm text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                disabled={invoice.type !== 'inpatient'}
               >
                 Rawat Inap
               </TabsTrigger>
               <TabsTrigger
                 value="outpatient"
                 className="text-xs sm:text-sm text-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                disabled={invoice.type !== 'outpatient'}
               >
                 Rawat Jalan
               </TabsTrigger>
@@ -84,30 +149,38 @@ export default function Page() {
             <TabsContent value="inpatient" className="space-y-3 sm:space-y-4">
               <div className="flex flex-col gap-1 sm:gap-2 px-2 sm:px-3">
                 <h2 className="text-base sm:text-lg font-semibold">
-                  Form Rawat Inap
+                  Edit Form Rawat Inap
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  Isi formulir berikut untuk membuat invoice rawat inap. Tanggal
-                  masuk dan tanggal keluar wajib diisi.
+                  Edit formulir berikut untuk memperbarui invoice rawat inap.
+                  Tanggal masuk dan tanggal keluar wajib diisi.
                 </p>
               </div>
               <div className="w-full">
-                <InvoiceForm type="inpatient" />
+                <InvoiceForm
+                  type="inpatient"
+                  initialData={invoice}
+                  editMode={true}
+                />
               </div>
             </TabsContent>
 
             <TabsContent value="outpatient" className="space-y-3 sm:space-y-4">
               <div className="flex flex-col gap-1 sm:gap-2 px-2 sm:px-3">
                 <h2 className="text-base sm:text-lg font-semibold">
-                  Form Rawat Jalan
+                  Edit Form Rawat Jalan
                 </h2>
                 <p className="text-xs text-muted-foreground">
-                  Isi formulir berikut untuk membuat invoice rawat jalan. Hanya
-                  tanggal masuk yang perlu diisi.
+                  Edit formulir berikut untuk memperbarui invoice rawat jalan.
+                  Hanya tanggal masuk yang perlu diisi.
                 </p>
               </div>
               <div className="w-full">
-                <InvoiceForm type="outpatient" />
+                <InvoiceForm
+                  type="outpatient"
+                  initialData={invoice}
+                  editMode={true}
+                />
               </div>
             </TabsContent>
           </Tabs>

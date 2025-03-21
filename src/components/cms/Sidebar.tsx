@@ -4,17 +4,17 @@ import {
   BookUser,
   Boxes,
   HandCoins,
-  KeyRound,
   Layers2,
   LayoutDashboard,
   LogOut,
   Shield,
   Stethoscope,
-} from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+} from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { ChangePasswordDialog } from '../profile/ChangePasswordDialog';
 import {
   Sidebar,
   SidebarContent,
@@ -166,25 +166,15 @@ const SidebarCMS = () => {
             <SidebarMenuItem>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Link
-                    href="/forgot-password"
-                    className="w-full flex items-center gap-2 p-2 rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                  >
-                    <KeyRound className="h-4 w-4 flex-shrink-0" />
-                    <span
-                      className="whitespace-nowrap overflow-hidden
-                      [@media(max-width:1090px)]:hidden [@media(max-width:1090px)]:group-hover:inline-block
-                      [@media(min-width:1091px)]:inline-block"
-                    >
-                      Change Password
-                    </span>
-                  </Link>
+                  <div className="w-full">
+                    <ChangePasswordDialog />
+                  </div>
                 </TooltipTrigger>
                 <TooltipContent
                   side="right"
                   className="lg:hidden bg-black/80 text-white"
                 >
-                  Change Password
+                  Ubah Kata Sandi
                 </TooltipContent>
               </Tooltip>
             </SidebarMenuItem>
@@ -196,13 +186,7 @@ const SidebarCMS = () => {
                     className="w-full flex items-center gap-2 p-2 rounded-md hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                   >
                     <LogOut className="h-4 w-4 flex-shrink-0" />
-                    <span
-                      className="whitespace-nowrap overflow-hidden
-                      [@media(max-width:1090px)]:hidden [@media(max-width:1090px)]:group-hover:inline-block
-                      [@media(min-width:1091px)]:inline-block"
-                    >
-                      Logout
-                    </span>
+                    <span className="hidden lg:inline-block">Logout</span>
                   </button>
                 </TooltipTrigger>
                 <TooltipContent

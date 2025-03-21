@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { InvoiceCard } from "@/components/cards/InvoiceCard";
-import { createPDFTemplate } from "@/components/pdfgenerator";
-import { InvoiceTable } from "@/components/tables/InvoiceTable";
-import { Button } from "@/components/ui/button";
-import { TableSkeleton } from "@/components/ui/skeleton-table";
-import { InvoiceData } from "@/data/types";
-import { toast } from "@/hooks/use-toast";
-import { Plus } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { InvoiceCard } from '@/components/cards/InvoiceCard';
+import { createPDFTemplate } from '@/components/pdfgenerator';
+import { InvoiceTable } from '@/components/tables/InvoiceTable';
+import { Button } from '@/components/ui/button';
+import { TableSkeleton } from '@/components/ui/skeleton-table';
+import { InvoiceData } from '@/data/types';
+import { toast } from '@/hooks/use-toast';
+import { Plus } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function InvoicePage() {
   const [invoices, setInvoices] = useState<(InvoiceData & { _id?: string })[]>(
@@ -21,14 +21,14 @@ export default function InvoicePage() {
 
   const fetchInvoices = async () => {
     try {
-      const response = await fetch("/api/invoices");
+      const response = await fetch('/api/invoices');
       const data = await response.json();
       setInvoices(data);
     } catch {
       toast({
-        title: "Error",
-        description: "Failed to fetch invoices",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to fetch invoices',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -43,11 +43,15 @@ export default function InvoicePage() {
     router.push(`/invoice/${id}`);
   };
 
+  const handleEdit = (id: string) => {
+    router.push(`/invoice/${id}/edit`);
+  };
+
   const handleDownload = async (id: string) => {
     try {
       const response = await fetch(`/api/invoices/${id}`);
       if (!response.ok) {
-        throw new Error("Failed to fetch invoice data");
+        throw new Error('Failed to fetch invoice data');
       }
 
       const invoiceData = await response.json();
@@ -55,15 +59,15 @@ export default function InvoicePage() {
       pdf.save(`${invoiceData.invoiceNo}.pdf`);
 
       toast({
-        title: "Success",
-        description: "PDF berhasil diunduh",
+        title: 'Success',
+        description: 'PDF berhasil diunduh',
       });
     } catch (error) {
-      console.error("Error downloading PDF:", error);
+      console.error('Error downloading PDF:', error);
       toast({
-        title: "Error",
-        description: "Gagal mengunduh PDF",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Gagal mengunduh PDF',
+        variant: 'destructive',
       });
     }
   };
@@ -116,6 +120,7 @@ export default function InvoicePage() {
                 invoices={invoices}
                 onView={handleView}
                 onDownload={handleDownload}
+                onEdit={handleEdit}
               />
             </div>
           </div>
@@ -129,6 +134,7 @@ export default function InvoicePage() {
                 index={index}
                 onView={handleView}
                 onDownload={handleDownload}
+                onEdit={handleEdit}
               />
             ))}
           </div>

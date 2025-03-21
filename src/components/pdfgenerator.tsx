@@ -352,8 +352,8 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
         }
 
         // Cart Items - more compact spacing
-        yPos += 10; // Consistent spacing between sections
-        checkAndAddPage(15); // Reduced from 20
+        yPos += 5; // Reduced from 10 to 5 for tighter spacing between services and cart items
+        checkAndAddPage(15);
 
         // Check if cart items array is empty, only add headers and section if data exists
         if (data.cartItems && data.cartItems.length > 0) {
@@ -498,74 +498,64 @@ export async function createPDFTemplate(data: InvoiceData): Promise<jsPDF> {
           });
         }
 
-        // Financial Breakdown
-        // Reduced space check from 60 to 40
-        const remainingSpace = pageHeight - (yPos + 40);
-        if (remainingSpace < 40) {
-          pdf.addPage();
-          yPos = margin;
+        // If we have space to draw the financial breakdown on the same page, don't add too much padding
+        // Calculate the space needed for the financial breakdown
+        const financialBreakdownHeight = 50; // Approximate height needed for financial breakdown
+
+        if (yPos + financialBreakdownHeight > pageHeight - margin) {
+          // If it won't fit on the current page, we'll have a page break, so add minimal spacing
+          yPos += 5;
         } else {
-          // Reduced from 20 to 15
-          yPos += 15;
+          // If it will fit on the same page, add a moderate spacing
+          yPos += 10;
         }
 
-        pdf.setFont('helvetica', 'bold');
-        pdf.setFontSize(10); // Reduced from 12
-        pdf.text('Rincian Biaya', pageWidth - margin - 80, yPos);
-        pdf.setFont('helvetica', 'normal');
+        checkAndAddPage(40);
 
-        // Reduced from 8 to 6
-        const lineHeight = 6;
-        const breakdownLeft = pageWidth - margin - 80;
+        // Table border - draw using lines instead of rect
+        safeLine(margin, yPos, pageWidth - margin, yPos); // top
+        safeLine(margin, yPos, margin, yPos + 35); // left
+        safeLine(pageWidth - margin, yPos, pageWidth - margin, yPos + 35); // right
+        safeLine(margin, yPos + 35, pageWidth - margin, yPos + 35); // bottom
 
-        // Function to add breakdown line
+        const breakdownX = pageWidth - margin - 60;
+        yPos += 10;
+
         const addBreakdownLine = (
           label: string,
           value: string | number,
           isTotal: boolean = false
         ) => {
-          if (isTotal) {
-            yPos += lineHeight;
-            pdf.setFont('helvetica', 'bold');
-            // Reduce spacing between text and line
-            safeLine(breakdownLeft, yPos - 2, pageWidth - margin, yPos - 2); // Reduced from -3
+          safeText(label, breakdownX, yPos);
+          let formattedValue: string;
+
+          if (typeof value === 'number') {
+            formattedValue = `Rp ${value.toLocaleString('id-ID')}`;
+          } else {
+            formattedValue = value;
           }
-          yPos += lineHeight;
-          pdf.setFontSize(8); // Reduced from 10
-          safeText(label, breakdownLeft, yPos);
 
-          const valueText =
-            typeof value === 'number' ? `Rp ${value.toLocaleString()}` : value;
-
-          safeText(valueText, pageWidth - margin, yPos, {
+          safeText(`: ${formattedValue}`, breakdownX + 40, yPos, {
             align: 'right',
           });
+
           if (isTotal) {
-            pdf.setFont('helvetica', 'normal');
-            yPos += lineHeight / 2;
+            safeLine(breakdownX, yPos + 2, breakdownX + 60, yPos + 2);
           }
+
+          yPos += 7;
         };
 
-        // Add payment method information
-        addBreakdownLine(
-          'Metode Pembayaran',
-          !data.paymentMethod ||
-            (data.paymentMethod === 'Other' && !data.customPaymentMethod)
-            ? 'Belum Terpilih'
-            : data.paymentMethod === 'Other' && data.customPaymentMethod
-            ? data.customPaymentMethod
-            : data.paymentMethod
-        );
-
-        // Add breakdown items
+        // Display subtotal which is now the same as total
         addBreakdownLine('Subtotal', data.subtotal);
-        const taxAmount = (data.subtotal * (data.tax || 0)) / 100;
-        addBreakdownLine(`Pajak (${data.tax || 0}%)`, taxAmount);
+
+        // Display total
         addBreakdownLine('Total', data.total, true);
 
+        // For inpatient, add deposit and balance
         if (data.type === 'inpatient') {
           addBreakdownLine('Deposit', data.deposit);
-          // Removed the "Sisa" line for both inpatient and outpatient
+          addBreakdownLine('Sisa Pembayaran', data.balance, true);
         }
 
         // Add page number
