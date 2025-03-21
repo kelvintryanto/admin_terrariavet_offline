@@ -27,7 +27,7 @@ export default function Page() {
     <div className="min-h-screen w-full overflow-x-hidden bg-background">
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <nav className="flex flex-col sm:flex-row sm:items-center gap-4 px-4 py-4">
-          <div className="flex items-center gap-3 flex-1">
+          <div className="flex items-center gap-3">
             <Button
               variant="ghost"
               size="icon"
@@ -36,7 +36,7 @@ export default function Page() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Button>
-            <div className="min-w-0 flex-1">
+            <div>
               <h1 className="text-4xl font-semibold truncate">
                 Invoice Pemeriksaan
               </h1>
@@ -45,11 +45,11 @@ export default function Page() {
               </p>
             </div>
           </div>
-          <div className="w-full sm:w-[400px]">
+          <div className="flex-1 flex justify-center">
             <Tabs
               value={activeTab}
               onValueChange={setActiveTab}
-              className="w-full"
+              className="w-full max-w-[400px]"
             >
               <TabsList className="grid w-full grid-cols-2 bg-muted h-9">
                 <TabsTrigger
@@ -67,6 +67,7 @@ export default function Page() {
               </TabsList>
             </Tabs>
           </div>
+          <div className="w-36 sm:w-48"></div> {/* Spacer div for balance */}
         </nav>
       </header>
 

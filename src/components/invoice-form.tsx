@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { Customer } from "@/app/models/customer";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Customer } from '@/app/models/customer';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -11,67 +11,67 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { toast } from "@/hooks/use-toast";
-import { debounce } from "lodash";
-import { Check, Edit, Minus, Plus, Trash2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+} from '@/components/ui/table';
+import { toast } from '@/hooks/use-toast';
+import { debounce } from 'lodash';
+import { Check, Edit, Minus, Plus, Trash2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
   CartItem,
   InvoiceData,
   Service,
   ServiceItem,
-} from "../data/types";
-import { ProductSearch } from "./cms/invoice/product-search";
-import { ServiceSearch } from "./cms/invoice/service-search";
+} from '../data/types';
+import { ProductSearch } from './cms/invoice/product-search';
+import { ServiceSearch } from './cms/invoice/service-search';
 
 // Helper function to format date from YYYY-MM-DD to DD-MM-YYYY
 const formatDate = (dateString: string | undefined) => {
-  if (!dateString) return "";
-  const [year, month, day] = dateString.split("-");
+  if (!dateString) return '';
+  const [year, month, day] = dateString.split('-');
   return `${day}-${month}-${year}`;
 };
 
 interface InvoiceFormProps {
-  type?: "inpatient" | "outpatient";
+  type?: 'inpatient' | 'outpatient';
 }
 
-export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
+export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
   const [formData, setFormData] = useState<InvoiceData>({
-    invoiceNo: "",
-    clientName: "",
-    contact: "",
-    subAccount: "",
-    inpatientDate: new Date().toISOString().split("T")[0],
-    inpatientTime: new Date().toLocaleTimeString("en-US", {
+    invoiceNo: '',
+    clientName: '',
+    contact: '',
+    subAccount: '',
+    inpatientDate: new Date().toISOString().split('T')[0],
+    inpatientTime: new Date().toLocaleTimeString('en-US', {
       hour12: false,
-      hour: "2-digit",
-      minute: "2-digit",
-      timeZone: "Asia/Jakarta",
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Jakarta',
     }),
-    dischargeDate: "",
-    dischargeTime: "",
+    dischargeDate: '',
+    dischargeTime: '',
     total: 0,
     deposit: 0,
     balance: 0,
-    status: type === "inpatient" ? "Dirawat Inap" : "Rawat Jalan",
+    status: type === 'inpatient' ? 'Dirawat Inap' : 'Rawat Jalan',
     services: [],
     cartItems: [],
     tax: 0,
     subtotal: 0,
     type: type,
-    paymentMethod: "Cash",
-    customPaymentMethod: "",
+    paymentMethod: 'Cash',
+    customPaymentMethod: '',
   });
 
-  const [depositText, setDepositText] = useState("");
+  const [depositText, setDepositText] = useState('');
 
   const [serviceInputs, setServiceInputs] = useState<Partial<ServiceItem>[]>([
     {
       _id: undefined,
-      name: "",
-      date: new Date().toISOString().split("T")[0],
+      name: '',
+      date: new Date().toISOString().split('T')[0],
       price: undefined,
     },
   ]);
@@ -79,23 +79,23 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
   const [cartInputs, setCartInputs] = useState<Partial<CartItem>[]>([
     {
       _id: undefined,
-      name: "",
-      kode: "",
-      category: "",
-      description: "",
+      name: '',
+      kode: '',
+      category: '',
+      description: '',
       jumlah: undefined,
       harga: 0,
-      date: new Date().toISOString().split("T")[0],
+      date: new Date().toISOString().split('T')[0],
       quantity: 0,
       total: 0,
-      notes: "",
+      notes: '',
       maxStock: undefined,
     },
   ]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [showCustomers, setShowCustomers] = useState(false);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
@@ -120,9 +120,9 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
   const fetchCustomers = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/customers");
+      const response = await fetch('/api/customers');
       if (!response.ok) {
-        throw new Error("Failed to fetch customers");
+        throw new Error('Failed to fetch customers');
       }
       const data = await response.json();
 
@@ -132,7 +132,7 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
       setCustomers(customersArray);
       setFilteredCustomers(customersArray);
     } catch (error) {
-      console.error("Error fetching customers:", error);
+      console.error('Error fetching customers:', error);
     } finally {
       setIsLoading(false);
     }
@@ -178,9 +178,9 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -197,7 +197,7 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
       setFormData((prev) => ({
         ...prev,
         clientName: customer.name,
-        contact: customer.phone || customer.email || "",
+        contact: customer.phone || customer.email || '',
       }));
 
       // If we have prefetched data for this customer, use it
@@ -228,7 +228,7 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
         // No dogs
         setFormData((prev) => ({
           ...prev,
-          subAccount: "Tidak ditemukan",
+          subAccount: 'Tidak ditemukan',
         }));
       }
 
@@ -253,14 +253,14 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
             }
           }
         } catch (error) {
-          console.error("Error fetching fresh customer data:", error);
+          console.error('Error fetching fresh customer data:', error);
         }
       }
 
       // Update the selected customer with the final data
       setSelectedCustomer(customer);
     } catch (error) {
-      console.error("Error handling customer selection:", error);
+      console.error('Error handling customer selection:', error);
     } finally {
       setIsLoadingDogs(false);
     }
@@ -282,19 +282,19 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
       }
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
   const formatNumber = (value: string) => {
     // Remove non-numeric characters
-    const numericValue = value.replace(/[^0-9]/g, "");
+    const numericValue = value.replace(/[^0-9]/g, '');
     // Convert to number and format with thousand separators
-    return numericValue === ""
-      ? ""
-      : Number(numericValue).toLocaleString("id-ID");
+    return numericValue === ''
+      ? ''
+      : Number(numericValue).toLocaleString('id-ID');
   };
 
   const addServiceInput = () => {
@@ -302,8 +302,8 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
       ...serviceInputs,
       {
         _id: undefined,
-        name: "",
-        date: new Date().toISOString().split("T")[0],
+        name: '',
+        date: new Date().toISOString().split('T')[0],
         price: undefined,
       },
     ]);
@@ -318,16 +318,16 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
       ...cartInputs,
       {
         _id: undefined,
-        name: "",
-        kode: "",
-        category: "",
-        description: "",
+        name: '',
+        kode: '',
+        category: '',
+        description: '',
         jumlah: undefined,
         harga: 0,
-        date: new Date().toISOString().split("T")[0],
+        date: new Date().toISOString().split('T')[0],
         quantity: 1,
         total: 0,
-        notes: "",
+        notes: '',
         maxStock: undefined,
       },
     ]);
@@ -375,20 +375,20 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
 
   const addServices = () => {
     const newServices = serviceInputs
-      .filter((input) => input.name && input.price)
+      .filter((input) => input.name && input.price !== undefined)
       .map((input) => ({
         _id: input._id,
-        name: input.name || "",
-        date: input.date || new Date().toISOString().split("T")[0],
+        name: input.name || '',
+        date: input.date || new Date().toISOString().split('T')[0],
         time:
           input.time ||
-          new Date().toLocaleTimeString("en-US", {
+          new Date().toLocaleTimeString('en-US', {
             hour12: false,
-            hour: "2-digit",
-            minute: "2-digit",
-            timeZone: "Asia/Jakarta",
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZone: 'Asia/Jakarta',
           }),
-        duration: input.duration || "1 jam",
+        duration: input.duration || '1 jam',
         price: input.price || 0,
       })) as ServiceItem[];
 
@@ -410,15 +410,15 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
     setServiceInputs([
       {
         _id: undefined,
-        name: "",
-        date: new Date().toISOString().split("T")[0],
-        time: new Date().toLocaleTimeString("en-US", {
+        name: '',
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toLocaleTimeString('en-US', {
           hour12: false,
-          hour: "2-digit",
-          minute: "2-digit",
-          timeZone: "Asia/Jakarta",
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Asia/Jakarta',
         }),
-        duration: "1 jam",
+        duration: '1 jam',
         price: undefined,
       },
     ]);
@@ -427,8 +427,7 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
       editingServiceIndex !== null
         ? formData.services
         : [...formData.services, ...newServices],
-      formData.cartItems,
-      formData.tax
+      formData.cartItems
     );
   };
 
@@ -437,16 +436,16 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
       .filter((input) => input.name && input.quantity && input.harga)
       .map((input) => ({
         _id: input._id,
-        name: input.name || "",
-        kode: input.kode || "",
-        category: input.category || "",
-        description: input.description || "",
+        name: input.name || '',
+        kode: input.kode || '',
+        category: input.category || '',
+        description: input.description || '',
         jumlah: input.jumlah || 0,
         harga: input.harga || 0,
-        date: input.date || new Date().toISOString().split("T")[0],
+        date: input.date || new Date().toISOString().split('T')[0],
         quantity: input.quantity || 0,
         total: (input.quantity || 0) * (input.harga || 0),
-        notes: input.notes || "",
+        notes: input.notes || '',
         maxStock: input.maxStock,
       })) as CartItem[];
 
@@ -468,16 +467,16 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
     setCartInputs([
       {
         _id: undefined,
-        name: "",
-        kode: "",
-        category: "",
-        description: "",
+        name: '',
+        kode: '',
+        category: '',
+        description: '',
         jumlah: 0,
         harga: 0,
-        date: new Date().toISOString().split("T")[0],
+        date: new Date().toISOString().split('T')[0],
         quantity: 0,
         total: 0,
-        notes: "",
+        notes: '',
         maxStock: undefined,
       },
     ]);
@@ -486,8 +485,7 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
       formData.services,
       editingCartIndex !== null
         ? formData.cartItems
-        : [...formData.cartItems, ...newCartItems],
-      formData.tax
+        : [...formData.cartItems, ...newCartItems]
     );
   };
 
@@ -509,51 +507,35 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
     calculateTotal(formData.services, updatedCartItems);
   };
 
-  const calculateTotal = (
-    services: ServiceItem[],
-    cartItems: CartItem[],
-    newTax?: number
-  ) => {
-    // Calculate subtotal from services and cart items
+  const calculateTotal = (services: ServiceItem[], cartItems: CartItem[]) => {
+    // Calculate total for services
     const servicesTotal = services.reduce(
-      (sum, service) => sum + (service.price || 0),
+      (acc, service) => acc + (service.price || 0),
       0
     );
-    const cartTotal = cartItems.reduce(
-      (sum, item) => sum + (item.total || 0),
+
+    // Calculate total for cart items
+    const cartItemsTotal = cartItems.reduce(
+      (acc, item) => acc + (item.total || 0),
       0
     );
-    const subtotal = servicesTotal + cartTotal;
 
-    // Use new tax value if provided, otherwise use existing formData value
-    const taxPercentage = newTax !== undefined ? newTax : formData.tax;
+    // Calculate subtotal
+    const subtotal = servicesTotal + cartItemsTotal;
 
-    // Apply tax (as a percentage)
-    const taxAmount = (subtotal * taxPercentage) / 100;
-    const total = subtotal + taxAmount;
-
-    // For outpatient invoices, the balance is the same as the total
-    // For inpatient invoices, the balance is total - deposit
-    const balance = type === "outpatient" ? total : total - formData.deposit;
-
-    setFormData((prev) => ({
-      ...prev,
-      subtotal,
-      total,
-      balance,
-    }));
-  };
-
-  const handleTaxChange = (value: string) => {
-    // Parse the input as a percentage (0-100)
-    const numericValue = value.replace(/\D/g, "");
-    const tax = numericValue === "" ? 0 : Math.min(Number(numericValue), 100);
+    // Total is the same as subtotal (no tax)
+    const total = subtotal;
 
     setFormData((prev) => {
-      const newFormData = { ...prev, tax };
-      // Pass the new tax value to calculateTotal
-      calculateTotal(newFormData.services, newFormData.cartItems, tax);
-      return newFormData;
+      // Calculate balance differently for inpatient vs outpatient
+      const balance = type === 'inpatient' ? total - prev.deposit : 0;
+
+      return {
+        ...prev,
+        subtotal,
+        total,
+        balance,
+      };
     });
   };
 
@@ -561,43 +543,38 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
     setLoading(true);
 
     try {
-      // Create invoice data
-      const invoiceData: InvoiceData = {
-        invoiceNo: formData.invoiceNo,
-        clientName: formData.clientName,
-        contact: formData.contact || "",
-        subAccount: formData.subAccount,
-        inpatientDate: formData.inpatientDate,
-        inpatientTime: formData.inpatientTime,
-        dischargeDate: formData.dischargeDate,
-        dischargeTime: formData.dischargeTime,
-        total: formData.total,
-        deposit: formData.deposit,
-        balance: formData.balance,
-        status: formData.status,
-        services: formData.services,
-        cartItems: formData.cartItems,
-        tax: formData.tax,
-        subtotal: formData.subtotal,
-        type: type,
-        paymentMethod: formData.paymentMethod,
-        customPaymentMethod:
-          formData.paymentMethod === "Other"
-            ? formData.customPaymentMethod
-            : undefined,
-      };
-
-      // Save invoice to database
-      const response = await fetch("/api/invoices", {
-        method: "POST",
+      const response = await fetch('/api/invoices', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(invoiceData),
+        body: JSON.stringify({
+          invoiceNo: formData.invoiceNo,
+          clientName: formData.clientName,
+          contact: formData.contact,
+          subAccount: formData.subAccount,
+          inpatientDate: formData.inpatientDate,
+          inpatientTime: formData.inpatientTime,
+          dischargeDate: formData.dischargeDate,
+          dischargeTime: formData.dischargeTime,
+          total: formData.total,
+          deposit: formData.deposit,
+          balance: formData.balance,
+          status: formData.status,
+          services: formData.services,
+          cartItems: formData.cartItems,
+          // Remove tax
+          subtotal: formData.subtotal,
+          type: formData.type,
+          paymentMethod:
+            formData.paymentMethod === 'Other'
+              ? formData.customPaymentMethod
+              : formData.paymentMethod,
+        }),
       });
 
       if (!response.ok) {
-        throw new Error("Failed to save invoice");
+        throw new Error('Failed to save invoice');
       }
 
       // Update product stock for each cart item
@@ -609,34 +586,34 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
         }));
 
         // Send the updates to the server using PATCH method
-        const stockUpdateResponse = await fetch("/api/products", {
-          method: "PATCH",
+        const stockUpdateResponse = await fetch('/api/products', {
+          method: 'PATCH',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({ products: productUpdates }),
         });
 
         if (!stockUpdateResponse.ok) {
-          console.error("Failed to update product stock");
+          console.error('Failed to update product stock');
           // Continue with invoice creation even if stock update fails
           // We don't want to block the invoice creation if stock update fails
         }
       }
 
       toast({
-        title: "Success",
-        description: "Invoice berhasil dibuat",
+        title: 'Success',
+        description: 'Invoice berhasil dibuat',
       });
 
       // Redirect to invoice page
-      router.push("/invoice");
+      router.push('/invoice');
     } catch (error) {
-      console.error("Error creating invoice:", error);
+      console.error('Error creating invoice:', error);
       toast({
-        title: "Error",
-        description: "Gagal membuat invoice",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Gagal membuat invoice',
+        variant: 'destructive',
       });
     } finally {
       setLoading(false);
@@ -662,19 +639,19 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
         }
       }
     } catch (error) {
-      console.error("Error pre-fetching customer data:", error);
+      console.error('Error pre-fetching customer data:', error);
     }
   };
 
   const handleDepositChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatNumber(e.target.value);
     setDepositText(formatted);
-    const numericValue = Number(e.target.value.replace(/[^0-9]/g, ""));
+    const numericValue = Number(e.target.value.replace(/[^0-9]/g, ''));
 
     // For outpatient invoices, the balance should remain the same as the total
     // For inpatient invoices, the balance is total - deposit
     const balance =
-      type === "outpatient" ? formData.total : formData.total - numericValue;
+      type === 'outpatient' ? formData.total : formData.total - numericValue;
 
     setFormData((prev) => ({
       ...prev,
@@ -752,10 +729,10 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                                           {customer.dogs
                                             .slice(0, 3)
                                             .map((dog) => dog.name)
-                                            .join(", ")}
+                                            .join(', ')}
                                           {customer.dogs.length > 3
-                                            ? "..."
-                                            : ""}
+                                            ? '...'
+                                            : ''}
                                         </span>
                                       ) : (
                                         <span className="italic text-gray-400">
@@ -777,7 +754,7 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                   <Label htmlFor="kontak">Kontak</Label>
                   <Input
                     id="kontak"
-                    value={formData.contact || ""}
+                    value={formData.contact || ''}
                     onChange={(e) =>
                       setFormData({ ...formData, contact: e.target.value })
                     }
@@ -855,7 +832,7 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                 </h2>
               </div>
               <div className="space-y-4">
-                {type === "inpatient" ? (
+                {type === 'inpatient' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-sm">Tanggal Masuk</Label>
@@ -987,7 +964,7 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                             serviceInputs[index]._id
                               ? {
                                   _id: serviceInputs[index]._id,
-                                  name: serviceInputs[index].name || "",
+                                  name: serviceInputs[index].name || '',
                                 }
                               : undefined
                           }
@@ -1017,20 +994,20 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                             <Input
                               type="text"
                               value={
-                                service.price
-                                  ? `${service.price.toLocaleString("id-ID")}`
-                                  : ""
+                                service.price !== undefined
+                                  ? `${service.price.toLocaleString('id-ID')}`
+                                  : ''
                               }
                               onChange={(e) => {
                                 const updatedInputs = [...serviceInputs];
                                 const numericValue = e.target.value.replace(
                                   /[^0-9]/g,
-                                  ""
+                                  ''
                                 );
                                 updatedInputs[index] = {
                                   ...updatedInputs[index],
                                   price:
-                                    numericValue === ""
+                                    numericValue === ''
                                       ? undefined
                                       : Number(numericValue),
                                 };
@@ -1079,7 +1056,7 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                                 {formatDate(service.date)}
                               </p>
                               <p className="text-sm mt-1">
-                                Rp {service.price.toLocaleString("id-ID")}
+                                Rp {service.price.toLocaleString('id-ID')}
                               </p>
                             </div>
                             <div className="flex items-center gap-1">
@@ -1120,7 +1097,7 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                               <TableCell>{formatDate(service.date)}</TableCell>
                               <TableCell>{service.name}</TableCell>
                               <TableCell className="text-right">
-                                {service.price.toLocaleString("id-ID")}
+                                {service.price.toLocaleString('id-ID')}
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-2">
@@ -1156,15 +1133,13 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                   className="w-full h-9 text-sm"
                   disabled={
                     !serviceInputs.some(
-                      (service) =>
-                        service.name &&
-                        service.date &&
-                        service.price !== undefined &&
-                        service.price > 0
+                      (input) => input.name && input.price !== undefined
                     )
                   }
                 >
-                  Tambah Semua Servis
+                  {editingServiceIndex !== null
+                    ? 'Update'
+                    : 'Tambah Semua Servis'}
                 </Button>
               </div>
             </div>
@@ -1219,7 +1194,7 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                             cartInputs[index]._id
                               ? {
                                   _id: cartInputs[index]._id,
-                                  name: cartInputs[index].name || "",
+                                  name: cartInputs[index].name || '',
                                 }
                               : undefined
                           }
@@ -1250,17 +1225,17 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                             type="text"
                             value={
                               item.harga
-                                ? `${item.harga.toLocaleString("id-ID")}`
-                                : ""
+                                ? `${item.harga.toLocaleString('id-ID')}`
+                                : ''
                             }
                             onChange={(e) => {
                               const updatedInputs = [...cartInputs];
                               const numericValue = e.target.value.replace(
                                 /[^0-9]/g,
-                                ""
+                                ''
                               );
                               const newHarga =
-                                numericValue === "" ? 0 : Number(numericValue);
+                                numericValue === '' ? 0 : Number(numericValue);
                               updatedInputs[index] = {
                                 ...updatedInputs[index],
                                 harga: newHarga,
@@ -1282,12 +1257,12 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                         <Input
                           type="text"
                           placeholder="Kuantitas"
-                          value={item.quantity === 0 ? "" : item.quantity}
+                          value={item.quantity === 0 ? '' : item.quantity}
                           onChange={(e) => {
                             const updatedInputs = [...cartInputs];
-                            const value = e.target.value.replace(/[^0-9]/g, "");
+                            const value = e.target.value.replace(/[^0-9]/g, '');
                             const quantity =
-                              value === ""
+                              value === ''
                                 ? 0
                                 : Math.min(
                                     Number.parseInt(value),
@@ -1304,7 +1279,7 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                           }}
                           onBlur={(e) => {
                             const updatedInputs = [...cartInputs];
-                            if (!e.target.value || e.target.value === "0") {
+                            if (!e.target.value || e.target.value === '0') {
                               updatedInputs[index] = {
                                 ...updatedInputs[index],
                                 quantity: 1,
@@ -1375,13 +1350,13 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                                     Harga:
                                   </span>
                                   <span>
-                                    Rp {item.harga.toLocaleString("id-ID")}
+                                    Rp {item.harga.toLocaleString('id-ID')}
                                   </span>
                                 </div>
                                 <div className="flex items-center justify-between text-sm font-medium">
                                   <span>Total:</span>
                                   <span>
-                                    Rp {item.total.toLocaleString("id-ID")}
+                                    Rp {item.total.toLocaleString('id-ID')}
                                   </span>
                                 </div>
                               </div>
@@ -1435,10 +1410,10 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                                 {item.quantity}
                               </TableCell>
                               <TableCell className="text-right">
-                                {item.harga.toLocaleString("id-ID")}
+                                {item.harga.toLocaleString('id-ID')}
                               </TableCell>
                               <TableCell className="text-right">
-                                {item.total.toLocaleString("id-ID")}
+                                {item.total.toLocaleString('id-ID')}
                               </TableCell>
                               <TableCell>{item.notes}</TableCell>
                               <TableCell>
@@ -1512,16 +1487,16 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                         value={formData.paymentMethod}
                         onChange={(e) => {
                           const value = e.target
-                            .value as InvoiceData["paymentMethod"];
+                            .value as InvoiceData['paymentMethod'];
                           setFormData((prev) => ({
                             ...prev,
                             paymentMethod: value,
                           }));
                         }}
                         className={`flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
-                          formData.paymentMethod === "Other"
-                            ? "w-1/2"
-                            : "w-full"
+                          formData.paymentMethod === 'Other'
+                            ? 'w-1/2'
+                            : 'w-full'
                         }`}
                       >
                         <option value="Cash">Cash</option>
@@ -1532,7 +1507,7 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                         <option value="Other">Other</option>
                       </select>
 
-                      {formData.paymentMethod === "Other" && (
+                      {formData.paymentMethod === 'Other' && (
                         <Input
                           id="customPaymentMethod"
                           value={formData.customPaymentMethod}
@@ -1553,29 +1528,19 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                     <Label htmlFor="subtotal">Subtotal</Label>
                     <Input
                       id="subtotal"
-                      value={formData.subtotal.toLocaleString("id-ID")}
+                      value={formData.subtotal.toLocaleString('id-ID')}
                       disabled
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="tax">Pajak (%)</Label>
-                    <Input
-                      id="tax"
-                      type="text"
-                      value={formData.tax || ""}
-                      onChange={(e) => handleTaxChange(e.target.value)}
-                      placeholder="0"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="total">Total</Label>
                     <Input
                       id="total"
-                      value={formData.total.toLocaleString("id-ID")}
+                      value={formData.total.toLocaleString('id-ID')}
                       disabled
                     />
                   </div>
-                  {type === "inpatient" && (
+                  {type === 'inpatient' && (
                     <>
                       <div className="space-y-2">
                         <Label htmlFor="deposit">Deposit</Label>
@@ -1590,7 +1555,7 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                         <Label htmlFor="balance">Sisa</Label>
                         <Input
                           id="balance"
-                          value={formData.balance.toLocaleString("id-ID")}
+                          value={formData.balance.toLocaleString('id-ID')}
                           disabled
                         />
                       </div>
@@ -1612,7 +1577,7 @@ export default function InvoiceForm({ type = "inpatient" }: InvoiceFormProps) {
                 !formData.contact?.trim()
               }
             >
-              {loading ? "Membuat Invoice..." : "Buat Invoice"}
+              {loading ? 'Membuat Invoice...' : 'Buat Invoice'}
             </Button>
           </div>
         </div>
