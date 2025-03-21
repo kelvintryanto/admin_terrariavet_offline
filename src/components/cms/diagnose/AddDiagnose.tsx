@@ -421,6 +421,7 @@ export default function AddDiagnose({
         onClick={() => {
           setCreateDialogOpen(true);
         }}
+        className="flex-1 sm:flex-none"
       >
         Tambah Diagnosa
       </Button>

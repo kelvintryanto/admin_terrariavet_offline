@@ -35,35 +35,43 @@ const formatDate = (dateString: string | undefined) => {
 
 interface InvoiceFormProps {
   type?: 'inpatient' | 'outpatient';
+  initialData?: InvoiceData;
+  editMode?: boolean;
 }
 
-export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
-  const [formData, setFormData] = useState<InvoiceData>({
-    invoiceNo: '',
-    clientName: '',
-    contact: '',
-    subAccount: '',
-    inpatientDate: new Date().toISOString().split('T')[0],
-    inpatientTime: new Date().toLocaleTimeString('en-US', {
-      hour12: false,
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'Asia/Jakarta',
-    }),
-    dischargeDate: '',
-    dischargeTime: '',
-    total: 0,
-    deposit: 0,
-    balance: 0,
-    status: type === 'inpatient' ? 'Dirawat Inap' : 'Rawat Jalan',
-    services: [],
-    cartItems: [],
-    tax: 0,
-    subtotal: 0,
-    type: type,
-    paymentMethod: 'Cash',
-    customPaymentMethod: '',
-  });
+export default function InvoiceForm({
+  type = 'inpatient',
+  initialData,
+  editMode = false,
+}: InvoiceFormProps) {
+  const [formData, setFormData] = useState<InvoiceData>(
+    initialData || {
+      invoiceNo: '',
+      clientName: '',
+      contact: '',
+      subAccount: '',
+      inpatientDate: new Date().toISOString().split('T')[0],
+      inpatientTime: new Date().toLocaleTimeString('en-US', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        timeZone: 'Asia/Jakarta',
+      }),
+      dischargeDate: '',
+      dischargeTime: '',
+      total: 0,
+      deposit: 0,
+      balance: 0,
+      status: type === 'inpatient' ? 'Dirawat Inap' : 'Rawat Jalan',
+      services: [],
+      cartItems: [],
+      tax: 0,
+      subtotal: 0,
+      type: type,
+      paymentMethod: 'Cash',
+      customPaymentMethod: '',
+    }
+  );
 
   const [depositText, setDepositText] = useState('');
 
@@ -540,79 +548,132 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
   };
 
   const handleSubmit = async () => {
-    setLoading(true);
-
     try {
-      const response = await fetch('/api/invoices', {
-        method: 'POST',
+      setLoading(true);
+
+      // Add validation here if needed
+      if (!formData.invoiceNo) {
+        toast({
+          title: 'Error',
+          description: 'Nomor Invoice wajib diisi',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (!formData.clientName) {
+        toast({
+          title: 'Error',
+          description: 'Nama Klien wajib diisi',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      // If it's an inpatient invoice, require discharge date
+      if (type === 'inpatient' && !formData.dischargeDate) {
+        toast({
+          title: 'Error',
+          description: 'Tanggal Keluar wajib diisi untuk rawat inap',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Setup data to send
+      const dataToSend = {
+        ...formData,
+        status:
+          formData.status ||
+          (type === 'inpatient' ? 'Dirawat Inap' : 'Rawat Jalan'),
+        type: type,
+        paymentMethod:
+          formData.paymentMethod === 'Other'
+            ? formData.customPaymentMethod
+            : formData.paymentMethod,
+      };
+
+      // Remove _id field when updating to avoid MongoDB error
+      if (editMode && dataToSend._id) {
+        delete dataToSend._id;
+      }
+
+      // Use PUT for edit mode, POST for create
+      const url = editMode
+        ? `/api/invoices/${initialData?._id}`
+        : '/api/invoices';
+
+      const method = editMode ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          invoiceNo: formData.invoiceNo,
-          clientName: formData.clientName,
-          contact: formData.contact,
-          subAccount: formData.subAccount,
-          inpatientDate: formData.inpatientDate,
-          inpatientTime: formData.inpatientTime,
-          dischargeDate: formData.dischargeDate,
-          dischargeTime: formData.dischargeTime,
-          total: formData.total,
-          deposit: formData.deposit,
-          balance: formData.balance,
-          status: formData.status,
-          services: formData.services,
-          cartItems: formData.cartItems,
-          // Remove tax
-          subtotal: formData.subtotal,
-          type: formData.type,
-          paymentMethod:
-            formData.paymentMethod === 'Other'
-              ? formData.customPaymentMethod
-              : formData.paymentMethod,
-        }),
+        body: JSON.stringify(dataToSend),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to save invoice');
+        throw new Error(
+          editMode ? 'Failed to update invoice' : 'Failed to create invoice'
+        );
       }
 
-      // Update product stock for each cart item
-      if (formData.cartItems.length > 0) {
-        // Create an array of product updates
-        const productUpdates = formData.cartItems.map((item) => ({
-          productId: item._id,
-          quantity: item.quantity,
-        }));
+      const result = await response.json();
+      // Update product stock for cart items only in create mode (not in edit mode)
+      if (!editMode && formData.cartItems && formData.cartItems.length > 0) {
+        try {
+          // Create an array of product updates
+          const productUpdates = formData.cartItems.map((item) => ({
+            productId: item._id,
+            quantity: item.quantity,
+          }));
 
-        // Send the updates to the server using PATCH method
-        const stockUpdateResponse = await fetch('/api/products', {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ products: productUpdates }),
-        });
+          // Send the updates to the server using PATCH method
+          const stockUpdateResponse = await fetch('/api/products', {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ products: productUpdates }),
+          });
 
-        if (!stockUpdateResponse.ok) {
-          console.error('Failed to update product stock');
-          // Continue with invoice creation even if stock update fails
-          // We don't want to block the invoice creation if stock update fails
+          if (!stockUpdateResponse.ok) {
+            console.error('Failed to update product stock');
+          }
+        } catch (stockError) {
+          console.error('Error updating stock:', stockError);
         }
       }
 
       toast({
         title: 'Success',
-        description: 'Invoice berhasil dibuat',
+        description: editMode
+          ? 'Invoice berhasil diperbarui'
+          : 'Invoice berhasil dibuat',
       });
 
-      // Redirect to invoice page
-      router.push('/invoice');
+      // In edit mode, use the initialData's _id for redirection
+      // In create mode, use the result's _id or id
+      let invoiceId;
+      if (editMode) {
+        invoiceId = initialData?._id;
+      } else {
+        invoiceId = result._id ? result._id.toString() : result.id;
+      }
+
+      // Navigate to the invoice detail page
+      router.push(`/invoice/${invoiceId}`);
     } catch (error) {
-      console.error('Error creating invoice:', error);
+      console.error('Error submitting invoice:', error);
       toast({
         title: 'Error',
-        description: 'Gagal membuat invoice',
+        description: editMode
+          ? 'Gagal memperbarui invoice. Silakan coba lagi.'
+          : 'Gagal membuat invoice. Silakan coba lagi.',
         variant: 'destructive',
       });
     } finally {
@@ -659,6 +720,52 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
       balance: balance,
     }));
   };
+
+  // Initialize form data from initialData if in edit mode
+  useEffect(() => {
+    if (initialData && editMode) {
+      // Initialize form data
+      setFormData(initialData);
+
+      // Set deposit text
+      setDepositText(initialData.deposit?.toString() || '');
+
+      // Set search term to client name
+      setSearchTerm(initialData.clientName || '');
+
+      // Initialize service inputs if services exist
+      if (initialData.services && initialData.services.length > 0) {
+        setServiceInputs(
+          initialData.services.map((service) => ({
+            _id: service._id,
+            name: service.name,
+            date: service.date,
+            price: service.price,
+          }))
+        );
+      }
+
+      // Initialize cart inputs if cart items exist
+      if (initialData.cartItems && initialData.cartItems.length > 0) {
+        setCartInputs(
+          initialData.cartItems.map((item) => ({
+            _id: item._id,
+            name: item.name,
+            kode: item.kode,
+            category: item.category,
+            description: item.description,
+            jumlah: item.jumlah,
+            harga: item.harga,
+            date: item.date,
+            quantity: item.quantity,
+            total: item.total,
+            notes: item.notes,
+            maxStock: item.maxStock,
+          }))
+        );
+      }
+    }
+  }, [initialData, editMode]);
 
   return (
     <div className="max-w-[1400px] mx-auto p-2 sm:p-4 lg:p-6">
@@ -1577,7 +1684,13 @@ export default function InvoiceForm({ type = 'inpatient' }: InvoiceFormProps) {
                 !formData.contact?.trim()
               }
             >
-              {loading ? 'Membuat Invoice...' : 'Buat Invoice'}
+              {loading
+                ? editMode
+                  ? 'Memperbarui Invoice...'
+                  : 'Membuat Invoice...'
+                : editMode
+                ? 'Edit Invoice'
+                : 'Buat Invoice'}
             </Button>
           </div>
         </div>

@@ -1,14 +1,17 @@
+import { canEditInvoice } from '@/app/utils/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { InvoiceData } from '@/data/types';
 import { formatRupiah } from '@/lib/utils';
-import { Eye, FileDown } from 'lucide-react';
+import { Edit, FileDown } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface InvoiceCardProps {
   invoice: InvoiceData & { _id?: string };
   index: number;
   onView: (id: string) => void;
   onDownload: (id: string) => void;
+  onEdit?: (id: string) => void;
 }
 
 export function InvoiceCard({
@@ -16,9 +19,30 @@ export function InvoiceCard({
   index,
   onView,
   onDownload,
+  onEdit,
 }: InvoiceCardProps) {
+  const [userRole, setUserRole] = useState<string>('');
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        const response = await fetch('/api/users/me');
+        const data = await response.json();
+        if (data.user) {
+          setUserRole(data.user.role);
+        }
+      } catch (error) {
+        console.error('Error fetching user role:', error);
+      }
+    };
+    fetchUserRole();
+  }, []);
+
   return (
-    <Card className="hover:bg-accent cursor-pointer transition-colors">
+    <Card
+      className="hover:bg-accent cursor-pointer transition-colors"
+      onClick={() => onView(invoice._id || '')}
+    >
       <CardContent className="p-4">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
@@ -29,6 +53,14 @@ export function InvoiceCard({
             <div>
               <p className="text-muted-foreground">Nama Klien</p>
               <p className="font-medium">{invoice.clientName}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground">Nama Anjing</p>
+              <p className="font-medium">
+                {invoice.subAccount && invoice.subAccount !== 'Tidak ditemukan'
+                  ? invoice.subAccount
+                  : '-'}
+              </p>
             </div>
             <div>
               <p className="text-muted-foreground">Kontak</p>
@@ -49,29 +81,47 @@ export function InvoiceCard({
               <p className="text-sm text-muted-foreground">Total</p>
               <p className="font-medium">{formatRupiah(invoice.total)}</p>
             </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 px-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onView(invoice._id || '');
-                }}
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 px-2"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDownload(invoice._id || '');
-                }}
-              >
-                <FileDown className="h-4 w-4" />
-              </Button>
+            <div className="flex justify-center gap-1 pt-2">
+              {canEditInvoice(userRole) ? (
+                <>
+                  {onEdit && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(invoice._id || '');
+                      }}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDownload(invoice._id || '');
+                    }}
+                  >
+                    <FileDown className="h-4 w-4" />
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDownload(invoice._id || '');
+                  }}
+                >
+                  <FileDown className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         </div>
