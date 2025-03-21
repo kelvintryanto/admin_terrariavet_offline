@@ -161,7 +161,7 @@ const SidebarCMS = () => {
           </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter className="absolute bottom-0 left-0 right-0 border-t text-base">
+        <SidebarFooter className="absolute bottom-0 left-0 right-0 border-t text-sm">
           <SidebarMenu>
             <SidebarMenuItem>
               <Tooltip>
