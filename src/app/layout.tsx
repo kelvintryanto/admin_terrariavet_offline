@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
@@ -27,6 +28,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         {children}
+        <SpeedInsights />
         <Toaster />
       </body>
     </html>
