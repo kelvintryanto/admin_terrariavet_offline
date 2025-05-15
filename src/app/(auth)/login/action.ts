@@ -8,7 +8,6 @@ import {
 import { getUserByEmail } from '@/app/models/user';
 import { comparePass } from '@/app/utils/bcrypt';
 import { sign } from '@/app/utils/jwt';
-import { ObjectId } from 'mongodb';
 import { ResponseCookies } from 'next/dist/compiled/@edge-runtime/cookies';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
@@ -30,7 +29,7 @@ interface LoginState {
 }
 
 interface AuthUser {
-  _id: ObjectId;
+  id: string;
   email?: string;
   name: string;
   role: string;
@@ -134,7 +133,7 @@ export async function loginAction(
     isValid = await comparePass(parsedData.data.password, adminUser.password);
     if (isValid) {
       userData = {
-        _id: adminUser._id,
+        id: adminUser.id,
         email: adminUser.email,
         name: adminUser.name,
         role: adminUser.role,
@@ -148,7 +147,7 @@ export async function loginAction(
     );
     if (isValid) {
       userData = {
-        _id: customer._id,
+        id: customer._id.toString(),
         email: customer.email,
         name: customer.name,
         role: customer.role,
@@ -166,7 +165,7 @@ export async function loginAction(
 
   // Create JWT token
   const token = await sign({
-    id: userData._id.toString(),
+    id: userData.id,
     email: userData.email || '', // Use empty string as fallback if email is undefined
     name: userData.name,
     role: userData.role,
