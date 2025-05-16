@@ -25,3 +25,168 @@ model User {
   updatedAt DateTime @updatedAt
 }
 
+model Customer {
+  id        String @id @default(uuid())
+  name      String
+  email     String?
+  phone     String
+  address   String
+  joinDate  DateTime @default(now())
+  profileImage  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Breed {
+  id        String @id @default(uuid())
+  name      String
+}
+
+enum Sex {
+  male
+  female
+}
+
+model Dog {
+  id              String @id @default(uuid())
+  name            String
+  breedId         String
+  breed           Breed  @relation(fields: [breedId], references: [id])
+  customBreed     String?
+  birthYear       Int
+  birthMonth      Int
+  color           String
+  weight          Float
+  sex             Sex
+  lastVaccineDate DateTime
+  lastDewormDate  DateTime
+  profileImage    String?
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id])
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt      
+}
+
+enum CategoryType {
+  product
+  service
+}
+
+model Category {
+  id              String @id @default(uuid())
+  name            String
+  type            CategoryType
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt 
+}
+
+model Service {
+  id              String @id @default(uuid())
+  code            String
+  name            String
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id])
+  price           Int
+  description     String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt 
+}
+
+model Product {
+  id              String @id @default(uuid())
+  code            String
+  name            String
+  categoryId      String
+  category        Category @relation(fields: [categoryId], references: [id])
+  description     String
+  amount          Int
+  price           Int
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt 
+}
+
+model Diagnose {
+  id              String @id @default(uuid())
+  dxNumber        String
+  dxDate          Date
+  doctorName      String
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id])
+  dogId           String
+  dog             Dog @relation(fields: [dogId], references: [id])
+  symptom         String
+  description     String
+  temperature     Float
+  weight          Float
+  bloodPressure   String
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt 
+}
+
+enum TreatmentType {
+  rawatInap
+  rawatJalan
+}
+
+enum PaymentMethod {
+  Cash
+  Transfer
+  Kartu Kredit
+  Qris
+  Gopay
+  Other
+}
+
+model Invoice {
+  id                  String @id @default(uuid())
+  invoiceNo           String
+  customerId          String
+  customer            Customer @relation(fields: [customerId], references: [id])
+  dogId               String
+  dog                 Dog @relation(fields: [dogId], references: [id])
+  inpatientDate       String
+  inpatientTime       String
+  dischargeDate       String
+  dischargeTime       String
+  total               Int
+  deposit             Int
+  balance             Int
+  subtotal            Int
+  treatmentType       TreatmentType
+  paymentMethod       PaymentMethod
+  customPaymentMethod String   
+  notes               String?   
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt 
+}
+
+model InvoiceService {
+  id                  String @id @default(uuid())
+  invoiceId           String
+  invoice             Invoice @relation(fields: [invoiceId], references: [id])
+  serviceId           String
+  service             Service @relation(fields: [serviceId], references: [id])
+  name                String
+  code                String
+  datetime            DateTime
+  duration            String
+  price               Int
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt 
+}
+
+model InvoiceProduct {
+  id          String   @id @default(uuid())
+  invoiceId   String
+  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  name        String
+  code        String
+  amount      Int
+  price       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
