@@ -26,20 +26,24 @@ model User {
 }
 
 model Customer {
-  id        String @id @default(uuid())
-  name      String
-  email     String?
-  phone     String
-  address   String
-  joinDate  DateTime @default(now())
+  id            String @id @default(uuid())
+  name          String
+  email         String?
+  phone         String
+  address       String
+  joinDate      DateTime @default(now())
   profileImage  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  dog           Dog[]
+  Diagnose      Diagnose[]
+  invoice       Invoice[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Breed {
   id        String @id @default(uuid())
   name      String
+  dog       Dog[]
 }
 
 enum Sex {
@@ -63,6 +67,8 @@ model Dog {
   profileImage    String?
   customerId      String
   customer        Customer @relation(fields: [customerId], references: [id])
+  diagnose        Diagnose[]
+  invoice         Invoice[]
   notes           String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt      
@@ -77,6 +83,8 @@ model Category {
   id              String @id @default(uuid())
   name            String
   type            CategoryType
+  service         Service[]
+  product         Product[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt 
 }
@@ -89,6 +97,7 @@ model Service {
   category        Category @relation(fields: [categoryId], references: [id])
   price           Int
   description     String
+  invoice         InvoiceService[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt 
 }
@@ -102,6 +111,7 @@ model Product {
   description     String
   amount          Int
   price           Int
+  invoice         InvoiceProduct[]
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt 
 }
@@ -109,7 +119,7 @@ model Product {
 model Diagnose {
   id              String @id @default(uuid())
   dxNumber        String
-  dxDate          Date
+  dxDate          DateTime
   doctorName      String
   customerId      String
   customer        Customer @relation(fields: [customerId], references: [id])
@@ -133,7 +143,7 @@ enum TreatmentType {
 enum PaymentMethod {
   Cash
   Transfer
-  Kartu Kredit
+  KartuKredit
   Qris
   Gopay
   Other
@@ -156,7 +166,9 @@ model Invoice {
   subtotal            Int
   treatmentType       TreatmentType
   paymentMethod       PaymentMethod
-  customPaymentMethod String   
+  customPaymentMethod String 
+  invoiceService      InvoiceService[]
+  invoiceProduct      InvoiceProduct[]
   notes               String?   
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt 

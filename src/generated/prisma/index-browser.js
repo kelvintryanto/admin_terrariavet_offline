@@ -128,6 +128,136 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.CustomerScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  email: 'email',
+  phone: 'phone',
+  address: 'address',
+  joinDate: 'joinDate',
+  profileImage: 'profileImage',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.BreedScalarFieldEnum = {
+  id: 'id',
+  name: 'name'
+};
+
+exports.Prisma.DogScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  breedId: 'breedId',
+  customBreed: 'customBreed',
+  birthYear: 'birthYear',
+  birthMonth: 'birthMonth',
+  color: 'color',
+  weight: 'weight',
+  sex: 'sex',
+  lastVaccineDate: 'lastVaccineDate',
+  lastDewormDate: 'lastDewormDate',
+  profileImage: 'profileImage',
+  customerId: 'customerId',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.CategoryScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  type: 'type',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ServiceScalarFieldEnum = {
+  id: 'id',
+  code: 'code',
+  name: 'name',
+  categoryId: 'categoryId',
+  price: 'price',
+  description: 'description',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ProductScalarFieldEnum = {
+  id: 'id',
+  code: 'code',
+  name: 'name',
+  categoryId: 'categoryId',
+  description: 'description',
+  amount: 'amount',
+  price: 'price',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.DiagnoseScalarFieldEnum = {
+  id: 'id',
+  dxNumber: 'dxNumber',
+  dxDate: 'dxDate',
+  doctorName: 'doctorName',
+  customerId: 'customerId',
+  dogId: 'dogId',
+  symptom: 'symptom',
+  description: 'description',
+  temperature: 'temperature',
+  weight: 'weight',
+  bloodPressure: 'bloodPressure',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.InvoiceScalarFieldEnum = {
+  id: 'id',
+  invoiceNo: 'invoiceNo',
+  customerId: 'customerId',
+  dogId: 'dogId',
+  inpatientDate: 'inpatientDate',
+  inpatientTime: 'inpatientTime',
+  dischargeDate: 'dischargeDate',
+  dischargeTime: 'dischargeTime',
+  total: 'total',
+  deposit: 'deposit',
+  balance: 'balance',
+  subtotal: 'subtotal',
+  treatmentType: 'treatmentType',
+  paymentMethod: 'paymentMethod',
+  customPaymentMethod: 'customPaymentMethod',
+  notes: 'notes',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.InvoiceServiceScalarFieldEnum = {
+  id: 'id',
+  invoiceId: 'invoiceId',
+  serviceId: 'serviceId',
+  name: 'name',
+  code: 'code',
+  datetime: 'datetime',
+  duration: 'duration',
+  price: 'price',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.InvoiceProductScalarFieldEnum = {
+  id: 'id',
+  invoiceId: 'invoiceId',
+  productId: 'productId',
+  name: 'name',
+  code: 'code',
+  amount: 'amount',
+  price: 'price',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -137,10 +267,42 @@ exports.Prisma.NullsOrder = {
   first: 'first',
   last: 'last'
 };
+exports.Sex = exports.$Enums.Sex = {
+  male: 'male',
+  female: 'female'
+};
 
+exports.CategoryType = exports.$Enums.CategoryType = {
+  product: 'product',
+  service: 'service'
+};
+
+exports.TreatmentType = exports.$Enums.TreatmentType = {
+  rawatInap: 'rawatInap',
+  rawatJalan: 'rawatJalan'
+};
+
+exports.PaymentMethod = exports.$Enums.PaymentMethod = {
+  Cash: 'Cash',
+  Transfer: 'Transfer',
+  KartuKredit: 'KartuKredit',
+  Qris: 'Qris',
+  Gopay: 'Gopay',
+  Other: 'Other'
+};
 
 exports.Prisma.ModelName = {
-  User: 'User'
+  User: 'User',
+  Customer: 'Customer',
+  Breed: 'Breed',
+  Dog: 'Dog',
+  Category: 'Category',
+  Service: 'Service',
+  Product: 'Product',
+  Diagnose: 'Diagnose',
+  Invoice: 'Invoice',
+  InvoiceService: 'InvoiceService',
+  InvoiceProduct: 'InvoiceProduct'
 };
 
 /**
