@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -71,7 +70,7 @@ model Dog {
   invoice         Invoice[]
   notes           String?
   createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt      
+  updatedAt       DateTime @updatedAt
 }
 
 enum CategoryType {
@@ -86,7 +85,7 @@ model Category {
   service         Service[]
   product         Product[]
   createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt 
+  updatedAt       DateTime @updatedAt
 }
 
 model Service {
@@ -99,7 +98,7 @@ model Service {
   description     String
   invoice         InvoiceService[]
   createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt 
+  updatedAt       DateTime @updatedAt
 }
 
 model Product {
@@ -113,7 +112,7 @@ model Product {
   price           Int
   invoice         InvoiceProduct[]
   createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt 
+  updatedAt       DateTime @updatedAt
 }
 
 model Diagnose {
@@ -132,7 +131,7 @@ model Diagnose {
   bloodPressure   String
   notes           String?
   createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt 
+  updatedAt       DateTime @updatedAt
 }
 
 enum TreatmentType {
@@ -166,12 +165,12 @@ model Invoice {
   subtotal            Int
   treatmentType       TreatmentType
   paymentMethod       PaymentMethod
-  customPaymentMethod String 
+  customPaymentMethod String
   invoiceService      InvoiceService[]
   invoiceProduct      InvoiceProduct[]
-  notes               String?   
+  notes               String?
   createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt 
+  updatedAt           DateTime @updatedAt
 }
 
 model InvoiceService {
@@ -186,7 +185,7 @@ model InvoiceService {
   duration            String
   price               Int
   createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt 
+  updatedAt           DateTime @updatedAt
 }
 
 model InvoiceProduct {
