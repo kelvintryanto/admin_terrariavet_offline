@@ -1,10 +1,5 @@
 'use server';
 
-import {
-  getCustomerByEmail,
-  getCustomerByPhone,
-  verifyCustomerPassword,
-} from '@/app/models/customer';
 import { getUserByEmail } from '@/app/models/user';
 import { comparePass } from '@/app/utils/bcrypt';
 import { sign } from '@/app/utils/jwt';
@@ -107,17 +102,10 @@ export async function loginAction(
   let adminUser = null;
   if (isEmail) {
     adminUser = await getUserByEmail(identifier);
+    console.log(adminUser);
   }
 
-  // Then try to find in customers collection by email or phone
-  let customer = null;
-  if (isEmail) {
-    customer = await getCustomerByEmail(identifier);
-  } else {
-    customer = await getCustomerByPhone(identifier);
-  }
-
-  if (!adminUser && !customer) {
+  if (!adminUser) {
     return {
       error: 'Email atau nomor telepon atau password salah',
       success: false,
@@ -134,23 +122,9 @@ export async function loginAction(
     if (isValid) {
       userData = {
         id: adminUser.id,
-        email: adminUser.email,
+        email: adminUser.email || '',
         name: adminUser.name,
         role: adminUser.role,
-      };
-    }
-  } else if (customer) {
-    // Customer authentication
-    isValid = await verifyCustomerPassword(
-      customer.email || customer.phone,
-      parsedData.data.password
-    );
-    if (isValid) {
-      userData = {
-        id: customer._id.toString(),
-        email: customer.email,
-        name: customer.name,
-        role: customer.role,
       };
     }
   }
