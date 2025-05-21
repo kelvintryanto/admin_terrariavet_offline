@@ -1,9 +1,10 @@
 'use server';
 
-import { blacklistToken } from '@/app/models/token';
-import { getUserById, updatePassword } from '@/app/models/user';
-import { hashPass } from '@/app/utils/bcrypt';
-import { decode } from '@/app/utils/jwt';
+import { blacklistToken, isTokenBlacklisted } from '@/app/models/token';
+import {
+  resetPasswordWithToken,
+  verifyPasswordResetToken,
+} from '@/app/models/user';
 import { cookies } from 'next/headers';
 import { z } from 'zod';
 
@@ -90,32 +91,31 @@ export async function resetPasswordAction(
       };
     }
 
-    // Decode token
-    const decoded = await decode(token);
-    if (!decoded || !decoded.id || decoded.purpose !== 'password_reset') {
+    // Check if token is already used/blacklisted
+    const isBlacklisted = await isTokenBlacklisted(token);
+    if (isBlacklisted) {
+      return {
+        error: 'Token reset password sudah digunakan sebelumnya.',
+        success: false,
+      };
+    }
+
+    // Verify the reset token
+    const tokenValid = await verifyPasswordResetToken(token);
+    if (!tokenValid) {
       return {
         error: 'Token tidak valid atau sudah kedaluwarsa.',
         success: false,
       };
     }
 
-    // Get user
-    const user = await getUserById(decoded.id);
-    if (!user) {
-      return {
-        error: 'Pengguna tidak ditemukan.',
-        success: false,
-      };
+    // Reset the password
+    await resetPasswordWithToken(token, password);
+
+    // Blacklist the token to prevent reuse
+    if (typeof tokenValid !== 'boolean') {
+      await blacklistToken(token, tokenValid.userId);
     }
-
-    // Hash new password
-    const hashedPassword = await hashPass(password);
-
-    // Update user's password
-    await updatePassword(decoded.id, hashedPassword);
-
-    // Blacklist the token so it can't be used again
-    await blacklistToken(token, decoded.id);
 
     // Clear the authentication cookie to force logout
     const cookieStore = await cookies();

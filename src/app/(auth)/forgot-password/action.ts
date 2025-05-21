@@ -1,8 +1,7 @@
 'use server';
 
-import { getUserByEmail } from '@/app/models/user';
+import { generatePasswordResetToken, getUserByEmail } from '@/app/models/user';
 import { sendPasswordResetEmail } from '@/app/utils/email';
-import { sign } from '@/app/utils/jwt';
 import { z } from 'zod';
 
 // Schema for validating email
@@ -86,33 +85,21 @@ export async function forgotPasswordAction(
       };
     }
 
-    const resetToken = await sign(
-      {
-        id: user._id.toString(),
-        email: user.email || '',
-        name: user.name,
-        role: user.role,
-        purpose: 'password_reset',
-      },
-      '1h' // 1 hour expiry
-    );
-
-    // Encode the token for URL safety
-    const encodedToken = encodeURIComponent(resetToken);
-
-    // Create reset URL
-    const resetUrl = `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password/${encodedToken}`;
-
     try {
-      await sendPasswordResetEmail(email, user.name, resetUrl);
+      // Generate a reset token
+      const { resetToken } = await generatePasswordResetToken(email);
+
+      // Send the reset email
+      await sendPasswordResetEmail(email, user.name, resetToken);
+
+      return {
+        error: null,
+        success: true,
+      };
     } catch (emailError) {
+      console.error('Error sending reset email:', emailError);
       throw emailError; // Re-throw to be caught by the outer catch
     }
-
-    return {
-      error: null,
-      success: true,
-    };
   } catch (error) {
     console.error('Error in forgotPasswordAction:', error);
     return {

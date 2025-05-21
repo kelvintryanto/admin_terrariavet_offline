@@ -41,6 +41,16 @@ async function main() {
 
     await prisma.user.create({
       data: {
+        name: 'Ben',
+        email: 'benpardede3@gmail.com',
+        role: 'admin',
+        password: await bcrypt.hash('admin123', 10),
+        profileImage: 'https://ui-avatars.com/api/?name=Admin+User',
+      },
+    });
+
+    await prisma.user.create({
+      data: {
         name: 'Doctor User',
         email: 'doctor@terrariavet.com',
         role: 'doctor',

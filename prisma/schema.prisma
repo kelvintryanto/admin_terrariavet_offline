@@ -14,35 +14,45 @@ datasource db {
 }
 
 model User {
+  id                   String    @id @default(uuid())
+  email                String    @unique
+  name                 String
+  role                 String
+  password             String
+  profileImage         String?
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+model BlacklistedToken {
   id        String   @id @default(uuid())
-  email     String?  @unique
-  name      String
-  role      String
-  password  String
-  profileImage String?
+  token     String   @unique
+  userId    String
+  tokenType String   @default("password_reset")
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
 
 model Customer {
-  id            String @id @default(uuid())
-  name          String
-  email         String?
-  phone         String
-  address       String
-  joinDate      DateTime @default(now())
-  profileImage  String?
-  dog           Dog[]
-  Diagnose      Diagnose[]
-  invoice       Invoice[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           String     @id @default(uuid())
+  name         String
+  email        String?
+  phone        String
+  address      String
+  joinDate     DateTime   @default(now())
+  profileImage String?
+  dog          Dog[]
+  Diagnose     Diagnose[]
+  invoice      Invoice[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
 }
 
 model Breed {
-  id        String @id @default(uuid())
-  name      String
-  dog       Dog[]
+  id   String @id @default(uuid())
+  name String
+  dog  Dog[]
 }
 
 enum Sex {
@@ -51,10 +61,10 @@ enum Sex {
 }
 
 model Dog {
-  id              String @id @default(uuid())
+  id              String     @id @default(uuid())
   name            String
   breedId         String
-  breed           Breed  @relation(fields: [breedId], references: [id])
+  breed           Breed      @relation(fields: [breedId], references: [id])
   customBreed     String?
   birthYear       Int
   birthMonth      Int
@@ -65,12 +75,12 @@ model Dog {
   lastDewormDate  DateTime
   profileImage    String?
   customerId      String
-  customer        Customer @relation(fields: [customerId], references: [id])
+  customer        Customer   @relation(fields: [customerId], references: [id])
   diagnose        Diagnose[]
   invoice         Invoice[]
   notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 }
 
 enum CategoryType {
@@ -79,59 +89,59 @@ enum CategoryType {
 }
 
 model Category {
-  id              String @id @default(uuid())
-  name            String
-  type            CategoryType
-  service         Service[]
-  product         Product[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id        String       @id @default(uuid())
+  name      String
+  type      CategoryType
+  service   Service[]
+  product   Product[]
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
 }
 
 model Service {
-  id              String @id @default(uuid())
-  code            String
-  name            String
-  categoryId      String
-  category        Category @relation(fields: [categoryId], references: [id])
-  price           Int
-  description     String
-  invoice         InvoiceService[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id          String           @id @default(uuid())
+  code        String
+  name        String
+  categoryId  String
+  category    Category         @relation(fields: [categoryId], references: [id])
+  price       Int
+  description String
+  invoice     InvoiceService[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 }
 
 model Product {
-  id              String @id @default(uuid())
-  code            String
-  name            String
-  categoryId      String
-  category        Category @relation(fields: [categoryId], references: [id])
-  description     String
-  amount          Int
-  price           Int
-  invoice         InvoiceProduct[]
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id          String           @id @default(uuid())
+  code        String
+  name        String
+  categoryId  String
+  category    Category         @relation(fields: [categoryId], references: [id])
+  description String
+  amount      Int
+  price       Int
+  invoice     InvoiceProduct[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 }
 
 model Diagnose {
-  id              String @id @default(uuid())
-  dxNumber        String
-  dxDate          DateTime
-  doctorName      String
-  customerId      String
-  customer        Customer @relation(fields: [customerId], references: [id])
-  dogId           String
-  dog             Dog @relation(fields: [dogId], references: [id])
-  symptom         String
-  description     String
-  temperature     Float
-  weight          Float
-  bloodPressure   String
-  notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id            String   @id @default(uuid())
+  dxNumber      String
+  dxDate        DateTime
+  doctorName    String
+  customerId    String
+  customer      Customer @relation(fields: [customerId], references: [id])
+  dogId         String
+  dog           Dog      @relation(fields: [dogId], references: [id])
+  symptom       String
+  description   String
+  temperature   Float
+  weight        Float
+  bloodPressure String
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 enum TreatmentType {
@@ -149,12 +159,12 @@ enum PaymentMethod {
 }
 
 model Invoice {
-  id                  String @id @default(uuid())
+  id                  String           @id @default(uuid())
   invoiceNo           String
   customerId          String
-  customer            Customer @relation(fields: [customerId], references: [id])
+  customer            Customer         @relation(fields: [customerId], references: [id])
   dogId               String
-  dog                 Dog @relation(fields: [dogId], references: [id])
+  dog                 Dog              @relation(fields: [dogId], references: [id])
   inpatientDate       String
   inpatientTime       String
   dischargeDate       String
@@ -169,35 +179,35 @@ model Invoice {
   invoiceService      InvoiceService[]
   invoiceProduct      InvoiceProduct[]
   notes               String?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
 }
 
 model InvoiceService {
-  id                  String @id @default(uuid())
-  invoiceId           String
-  invoice             Invoice @relation(fields: [invoiceId], references: [id])
-  serviceId           String
-  service             Service @relation(fields: [serviceId], references: [id])
-  name                String
-  code                String
-  datetime            DateTime
-  duration            String
-  price               Int
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id        String   @id @default(uuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+  serviceId String
+  service   Service  @relation(fields: [serviceId], references: [id])
+  name      String
+  code      String
+  datetime  DateTime
+  duration  String
+  price     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model InvoiceProduct {
-  id          String   @id @default(uuid())
-  invoiceId   String
-  invoice     Invoice  @relation(fields: [invoiceId], references: [id])
-  productId   String
-  product     Product  @relation(fields: [productId], references: [id])
-  name        String
-  code        String
-  amount      Int
-  price       Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(uuid())
+  invoiceId String
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  name      String
+  code      String
+  amount    Int
+  price     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

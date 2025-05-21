@@ -45,25 +45,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // If the user is a Google user and setting a password for the first time
-    if (user.googleUser === true) {
-      console.log('Google user setting a password for the first time');
-      try {
-        await resetUserPassword(user.id, newPassword);
-        return Response.json({
-          message: 'Password berhasil disimpan',
-        });
-      } catch (error) {
-        console.error('Error setting password for Google user:', error);
-        return Response.json(
-          {
-            message: 'Gagal menyimpan password. Silakan coba lagi.',
-          },
-          { status: 500 }
-        );
-      }
-    }
-
     try {
       const isValidPassword = await verifyUserCurrentPassword(
         user.id,

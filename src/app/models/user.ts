@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { randomBytes } from 'crypto';
 import { comparePass, hashPass } from '../utils/bcrypt';
 
 const prisma = new PrismaClient();
@@ -22,25 +23,14 @@ export const getUserByEmail = async (email: string) => {
 export const getUserById = async (id: string) => {
   const user = await prisma.user.findUnique({
     where: { id },
-  });
-
-  // Kembalikan hanya beberapa field sesuai yang Bos mau
-  return user ? { id: user.id, name: user.name, email: user.email } : null;
-};
-
-
-export const updatePassword = async (userId: string, newPassword: string) => {
-  const result = await prisma.user.update({
-    where: { id: userId },
-    data: {
-      password: newPassword,
-      updatedAt: new Date(),
+    select: {
+      id: true,
+      name: true,
+      email: true,
     },
-  }).catch(() => {
-    throw new Error('User not found');
   });
 
-  return result;
+  return user;
 };
 
 export const verifyUserCurrentPassword = async (
@@ -55,18 +45,6 @@ export const verifyUserCurrentPassword = async (
     if (!user) {
       console.error(`User not found with ID: ${id}`);
       return false;
-    }
-
-    // Jika ada flag googleUser, sesuaikan kalau kamu pakai
-    // Kalau tidak ada, bisa dihilangkan bagian ini
-    if ((user as any).googleUser && !user.password) {
-      console.log('Google user without password cannot change password');
-      return false;
-    }
-
-    if ((user as any).googleUser === true) {
-      console.log('Google user bypassing password verification');
-      return true;
     }
 
     const isValid = await comparePass(currentPassword, user.password || '');
@@ -87,6 +65,8 @@ export const resetUserPassword = async (id: string, newPassword: string) => {
       data: {
         password: hashedPassword,
         updatedAt: new Date(),
+        resetPasswordToken: null,
+        resetPasswordExpires: null,
       },
     });
 
@@ -99,3 +79,99 @@ export const resetUserPassword = async (id: string, newPassword: string) => {
   }
 };
 
+// Generate a reset token for the user
+export const generatePasswordResetToken = async (email: string) => {
+  try {
+    const user = await getUserByEmail(email);
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Generate a random token
+    const resetToken = randomBytes(32).toString('hex');
+
+    // Token expires in 1 hour
+    const resetPasswordExpires = new Date(Date.now() + 3600000);
+
+    // Update user with the reset token and expiry
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        resetPasswordToken: resetToken,
+        resetPasswordExpires: resetPasswordExpires,
+      },
+    });
+
+    return {
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+      resetToken,
+      resetPasswordExpires,
+    };
+  } catch (error) {
+    console.error('Error generating password reset token:', error);
+    throw error;
+  }
+};
+
+// Verify a password reset token
+export const verifyPasswordResetToken = async (
+  token: string
+): Promise<{ userId: string; email: string; name: string } | boolean> => {
+  try {
+    const user = await prisma.user.findFirst({
+      where: {
+        resetPasswordToken: token,
+        resetPasswordExpires: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    if (!user) {
+      return false;
+    }
+
+    return {
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+    };
+  } catch (error) {
+    console.error('Error verifying reset token:', error);
+    return false;
+  }
+};
+
+// Reset password using token
+export const resetPasswordWithToken = async (
+  token: string,
+  newPassword: string
+) => {
+  try {
+    const userInfo = await verifyPasswordResetToken(token);
+
+    if (!userInfo || typeof userInfo === 'boolean') {
+      throw new Error('Invalid or expired reset token');
+    }
+
+    const hashedPassword = await hashPass(newPassword);
+
+    const result = await prisma.user.update({
+      where: { id: userInfo.userId },
+      data: {
+        password: hashedPassword,
+        resetPasswordToken: null,
+        resetPasswordExpires: null,
+        updatedAt: new Date(),
+      },
+    });
+
+    return result;
+  } catch (error) {
+    console.error('Error resetting password with token:', error);
+    throw error;
+  }
+};
