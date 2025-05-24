@@ -59,6 +59,16 @@ async function main() {
       },
     });
 
+    await prisma.user.create({
+      data: {
+        name: 'Kelvin Tryanto',
+        email: 'kelvin.tryanto@gmail.com',
+        role: 'admin',
+        password: await bcrypt.hash('admin123', 10),
+        profileImage: 'https://ui-avatars.com/api/?name=Doctor+User',
+      },
+    });
+
     // Seed breeds
     console.log('Seeding dog breeds...');
     const breeds = [
